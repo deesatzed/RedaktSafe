@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RedaktSafe Trust Packet Workbench</title>
+    <link rel="stylesheet" href="/frontend/styles.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <h1>RedaktSafe Trust Packet Workbench</h1>
+        <p>Local-first review packet for synthetic or deidentified-style text.</p>
+      </div>
+      <div class="badges" aria-label="Safety status">
+        <span>Local only</span>
+        <span>No cloud by default</span>
+        <span>Review required</span>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="panel input-panel" aria-labelledby="input-title">
+        <div class="panel-head">
+          <h2 id="input-title">Input</h2>
+          <output id="size">0 chars</output>
+        </div>
+        <textarea id="inputText" aria-label="Input text" spellcheck="false"></textarea>
+        <div class="toolbar">
+          <input id="fileInput" type="file" accept=".txt,.md,text/plain">
+          <button id="demoButton" type="button">Use Synthetic Demo</button>
+          <button id="clearButton" type="button">Clear</button>
+        </div>
+        <button id="preflightButton" class="primary" type="button">Run Local Preflight</button>
+        <p class="boundary">Do not paste real PHI unless you are operating in an approved local environment.</p>
+      </section>
+
+      <section class="panel result-panel" aria-labelledby="result-title">
+        <div class="panel-head">
+          <h2 id="result-title">Risk Lane</h2>
+          <span id="riskLane" class="risk">Not run</span>
+        </div>
+        <div id="warnings" class="warnings"></div>
+        <div class="summary-grid">
+          <div>
+            <h3>Entity Summary</h3>
+            <table>
+              <thead><tr><th>Type</th><th>Count</th></tr></thead>
+              <tbody id="entityRows"><tr><td colspan="2">No result</td></tr></tbody>
+            </table>
+          </div>
+          <div>
+            <h3>Limitations</h3>
+            <ul id="limitations">
+              <li>This output may retain residual re-identification risk.</li>
+              <li>Review before downstream use.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel artifact-panel" aria-labelledby="artifacts-title">
+        <div class="panel-head">
+          <h2 id="artifacts-title">Artifacts</h2>
+          <button id="packetButton" type="button" disabled>Create Packet</button>
+        </div>
+        <div id="downloads" class="downloads">
+          <p>No downloads yet.</p>
+        </div>
+      </section>
+
+      <section class="review" aria-labelledby="review-title">
+        <div class="panel-head">
+          <h2 id="review-title">Redacted Text</h2>
+        </div>
+        <pre id="redactedText">Run local preflight to review redacted text.</pre>
+      </section>
+    </main>
+
+    <script src="/frontend/app.js"></script>
+  </body>
+</html>
+

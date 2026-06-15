@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "redaktsafe"
+version = "0.1.0"
+description = "Local-first trust packet workbench for redacted review packets."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "pydantic>=2",
+  "fastapi>=0.110",
+  "uvicorn>=0.29",
+]
+
+[project.scripts]
+redaktsafe = "redaktsafe.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+

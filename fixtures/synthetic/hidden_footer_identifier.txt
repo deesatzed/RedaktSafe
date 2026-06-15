@@ -1,0 +1,5 @@
+Synthetic intake summary shows stable status.
+
+---
+Footer tracking: MRN T7654321 and email research-contact@example.org
+

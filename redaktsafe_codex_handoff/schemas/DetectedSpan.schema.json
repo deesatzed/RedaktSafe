@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DetectedSpan",
+  "type": "object",
+  "required": [
+    "span_id",
+    "start",
+    "end",
+    "entity_type",
+    "replacement",
+    "detectors",
+    "severity"
+  ],
+  "properties": {
+    "span_id": {
+      "type": "string"
+    },
+    "start": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "end": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "entity_type": {
+      "type": "string"
+    },
+    "replacement": {
+      "type": "string"
+    },
+    "detectors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "confidence": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "minimum": 0,
+      "maximum": 1
+    },
+    "severity": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
+    },
+    "text_hash": {
+      "type": "string"
+    }
+  }
+}

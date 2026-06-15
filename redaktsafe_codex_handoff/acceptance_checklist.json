@@ -1,0 +1,19 @@
+{
+  "version": "0.1",
+  "mvp_release_gate": [
+    "CLI creates redacted.txt, safe_packet.json, redaction_report.json, receipt.json, receipt.md, validation_summary.json",
+    "No external API key required",
+    "No raw input in receipts",
+    "Unsafe-pass count is zero on high-risk fixtures",
+    "Path traversal tests pass",
+    "No compliance overclaims in README/UI",
+    "All fixtures are synthetic",
+    "Model adapters are optional and disabled by default"
+  ],
+  "commands": [
+    "python -m pytest",
+    "redaktsafe doctor",
+    "redaktsafe packet fixtures/synthetic/simple_identifiers.txt --out /tmp/redaktsafe-simple",
+    "redaktsafe eval --fixtures evals/cases.jsonl --out /tmp/redaktsafe-eval"
+  ]
+}

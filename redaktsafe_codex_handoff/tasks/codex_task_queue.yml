@@ -1,0 +1,145 @@
+version: 0.1
+project: redaktsafe-trust-packet-workbench
+execution_rule: "Complete tasks in dependency order. Do not start UI or model work until deterministic CLI and tests pass."
+
+tasks:
+  - id: P0-001
+    title: Bootstrap Python package
+    phase: 0
+    depends_on: []
+    instructions: >
+      Create pyproject.toml, src/redaktsafe package, tests directory, README, .gitignore,
+      and a basic redaktsafe doctor command.
+    acceptance:
+      - python -m pytest passes
+      - redaktsafe doctor prints local status
+      - no external API key required
+
+  - id: P1-001
+    title: Define Pydantic contracts
+    phase: 1
+    depends_on: [P0-001]
+    instructions: >
+      Implement InputProfile, DetectedSpan, RedactionReport, SafePacket,
+      ResidualRiskAssessment, Receipt, PipelineConfig, and PacketRunResult.
+    acceptance:
+      - schemas can be exported
+      - unit tests validate required fields
+      - receipt model forbids raw_text field
+
+  - id: P1-002
+    title: Implement deterministic regex detectors
+    phase: 1
+    depends_on: [P1-001]
+    instructions: >
+      Add detectors for email, phone, SSN-like, MRN-like, NPI-like, date-like,
+      URL/IP-like, and configurable lexicon/name fixtures.
+    acceptance:
+      - detector unit tests pass
+      - structured identifiers have high severity
+      - no original span values are logged
+
+  - id: P1-003
+    title: Implement dedup and input profile
+    phase: 1
+    depends_on: [P1-001]
+    instructions: >
+      Implement exact-line deduplication and input profiling with duplicate ratio,
+      char count, line count, and scaffold indicators.
+    acceptance:
+      - dedup preserves at least one copy of each unique line
+      - profile tests cover duplicate-rich fixture
+
+  - id: P1-004
+    title: Implement span merge and redaction
+    phase: 1
+    depends_on: [P1-002]
+    instructions: >
+      Merge overlapping spans deterministically, preserve detector provenance,
+      and apply typed redaction replacements.
+    acceptance:
+      - overlapping spans are deterministic
+      - deterministic structured-ID findings are never dropped
+      - replacements use [REDACTED_TYPE] pattern
+
+  - id: P2-001
+    title: Implement packet pipeline
+    phase: 2
+    depends_on: [P1-003, P1-004]
+    instructions: >
+      Implement run_packet_pipeline from raw text to SafePacket, RedactionReport,
+      ResidualRiskAssessment, and Receipt.
+    acceptance:
+      - synthetic fixture produces complete artifacts in memory
+      - high-risk text is not marked safe
+      - pipeline fails closed on exceptions
+
+  - id: P2-002
+    title: Implement artifact writer and CLI packet command
+    phase: 2
+    depends_on: [P2-001]
+    instructions: >
+      Write redacted.txt, safe_packet.json, redaction_report.json, receipt.json,
+      receipt.md, and validation_summary.json. Add redaktsafe packet and redaktsafe text commands.
+    acceptance:
+      - CLI creates all artifacts
+      - receipt.md is human-readable
+      - strict mode returns nonzero for unsafe lane
+
+  - id: P3-001
+    title: Implement evaluation harness
+    phase: 3
+    depends_on: [P2-002]
+    instructions: >
+      Add JSONL evaluation fixtures and redaktsafe eval command with recall,
+      precision, unsafe-pass count, and latency metrics.
+    acceptance:
+      - eval runs in clean clone
+      - unsafe-pass count is explicit
+      - report written to eval_results.json and eval_report.md
+
+  - id: P4-001
+    title: Implement FastAPI local service
+    phase: 4
+    depends_on: [P2-002]
+    instructions: >
+      Add /health, /api/preflight, /api/packet, and scoped artifact routes.
+    acceptance:
+      - API tests pass
+      - path traversal blocked
+      - input size limit enforced
+
+  - id: P5-001
+    title: Implement minimal React UI
+    phase: 5
+    depends_on: [P4-001]
+    instructions: >
+      Build paste/upload UI, risk badge, redacted text review, entity summary,
+      limitations, and artifact downloads.
+    acceptance:
+      - user can process synthetic text locally
+      - UI shows local-only and not-compliance-guarantee warnings
+      - no external analytics or remote endpoints
+
+  - id: P6-001
+    title: Add optional adapter interfaces
+    phase: 6
+    depends_on: [P2-002]
+    instructions: >
+      Implement interfaces and stubs for redaktorg, Agent Pidgin, Sentinel, and MLX model adapters.
+    acceptance:
+      - app works if adapters are absent
+      - adapter metadata appears in receipt when enabled
+      - tests cover graceful fallback
+
+  - id: P7-001
+    title: Add fake model adapter tests and benchmark hooks
+    phase: 7
+    depends_on: [P6-001]
+    instructions: >
+      Add model adapter protocol, fake model detector, and benchmark output fields.
+      Real MLX model support is opt-in.
+    acceptance:
+      - fake model adapter test passes
+      - deterministic baseline remains default
+      - no model download in CI

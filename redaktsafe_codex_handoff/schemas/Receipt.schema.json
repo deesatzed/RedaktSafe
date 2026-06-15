@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Receipt",
+  "type": "object",
+  "required": [
+    "receipt_id",
+    "schema_version",
+    "created_at",
+    "pipeline_version",
+    "config_hash",
+    "source_hash",
+    "artifacts",
+    "detectors_used",
+    "risk_lane",
+    "output_hashes",
+    "no_raw_input_copied"
+  ],
+  "properties": {
+    "receipt_id": {
+      "type": "string"
+    },
+    "schema_version": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "pipeline_version": {
+      "type": "string"
+    },
+    "config_hash": {
+      "type": "string"
+    },
+    "source_hash": {
+      "type": "string"
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "detectors_used": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "model_adapters_used": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "risk_lane": {
+      "type": "string"
+    },
+    "counts_by_entity_type": {
+      "type": "object"
+    },
+    "dedup_summary": {
+      "type": "object"
+    },
+    "policy_findings": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "output_hashes": {
+      "type": "object"
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "no_raw_input_copied": {
+      "type": "boolean",
+      "const": true
+    }
+  }
+}

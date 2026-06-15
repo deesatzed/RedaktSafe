@@ -1,0 +1,34 @@
+# Package Manifest
+
+- `CODEX.md`
+- `README_CODEX_HANDOFF.md`
+- `RedaktSafe_Codex_Handoff_Master.docx`
+- `acceptance_checklist.json`
+- `docs/00_PRODUCT_DECISION_MEMO.md`
+- `docs/01_PRODUCT_REQUIREMENTS.md`
+- `docs/02_ARCHITECTURE_AND_DATA_FLOW.md`
+- `docs/03_IMPLEMENTATION_SPEC.md`
+- `docs/04_BUILD_PLAN_AND_MILESTONES.md`
+- `docs/05_SMALL_MODEL_STRATEGY.md`
+- `docs/06_REPO_INTEGRATION_MAP.md`
+- `docs/07_TESTING_AND_EVAL_PLAN.md`
+- `docs/08_SECURITY_PRIVACY_GOVERNANCE.md`
+- `docs/09_UI_UX_SPEC.md`
+- `docs/10_ACCEPTANCE_CRITERIA.md`
+- `docs/11_RISK_REGISTER_AND_KILL_CRITERIA.md`
+- `docs/12_FUTURE_EXPANSION_OPTIONS.md`
+- `evals/cases.jsonl`
+- `fixtures/synthetic/clinical_false_positive_drug_names.txt`
+- `fixtures/synthetic/duplicate_ehr_scaffold.txt`
+- `fixtures/synthetic/high_risk_mixed_identifiers.txt`
+- `fixtures/synthetic/no_phi_clean_note.txt`
+- `fixtures/synthetic/simple_identifiers.txt`
+- `prompts/CODEX_BOOTSTRAP_PROMPT.md`
+- `prompts/PHASE_0_TO_2_PROMPT.md`
+- `prompts/PHASE_3_EVAL_PROMPT.md`
+- `prompts/PHASE_4_TO_5_API_UI_PROMPT.md`
+- `prompts/PHASE_6_TO_8_ADAPTERS_PROMPT.md`
+- `schemas/DetectedSpan.schema.json`
+- `schemas/Receipt.schema.json`
+- `schemas/SafePacket.schema.json`
+- `tasks/codex_task_queue.yml`

@@ -1,0 +1,61 @@
+# RedaktSafe Trust Packet Workbench
+
+RedaktSafe is a local-first, privacy-supporting workbench for preparing synthetic or deidentified-style text for review. It creates redacted text, structured packet JSON, redaction reports, receipts, and validation summaries.
+
+RedaktSafe is deidentification-assistive software. It does not replace human review, local policy review, legal review, security review, or clinical judgment. Generated artifacts may retain residual re-identification risk and should be reviewed before any downstream use.
+
+## Current Status
+
+This repository is being built from `redaktsafe_codex_handoff/`. The deterministic CLI and packet pipeline are the first implementation target. API, UI, and optional adapters come after the CLI and evaluation gates pass.
+
+## Install
+
+```bash
+python -m pip install -e .
+```
+
+## Local Commands
+
+```bash
+python -m redaktsafe.cli doctor
+python -m redaktsafe.cli schemas --out /tmp/redaktsafe-schemas
+python -m redaktsafe.cli packet fixtures/synthetic/simple_identifiers.txt --out /tmp/redaktsafe-simple
+python -m redaktsafe.cli packet fixtures/synthetic/high_risk_mixed_identifiers.txt --out /tmp/redaktsafe-risk --strict
+python -m redaktsafe.cli eval --fixtures evals/cases.jsonl --out /tmp/redaktsafe-eval
+python -m redaktsafe.cli serve --host 127.0.0.1 --port 8765
+```
+
+After editable install, the console command is also available:
+
+```bash
+redaktsafe doctor
+```
+
+The local UI is served with the API at:
+
+```text
+http://127.0.0.1:8765/
+```
+
+## Safety Boundaries
+
+- Default operation is local and does not call cloud services.
+- No API key or model download is required for the default CLI.
+- Receipts exclude raw input text and original redacted span values.
+- Packets and receipts include residual-risk and review-required language.
+- High-risk or uncertain outputs fail closed in strict mode.
+- Synthetic fixtures are for testing only and are not real patient data.
+- Optional adapters are off by default and are not required for tests, CLI, API, UI, or evaluation.
+
+## Generated Artifacts
+
+A packet run writes:
+
+- `redacted.txt`
+- `safe_packet.json`
+- `redaction_report.json`
+- `receipt.json`
+- `receipt.md`
+- `validation_summary.json`
+
+Generated local run folders such as `.redaktsafe_runs/` are gitignored.

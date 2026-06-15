@@ -1,0 +1,10 @@
+{"case_id":"simple_identifiers_001","file":"fixtures/synthetic/simple_identifiers.txt","expected_entities":["NAME","MRN","PHONE","EMAIL"],"expected_min_risk_lane":"NEEDS_MANUAL_REVIEW"}
+{"case_id":"duplicate_ehr_001","file":"fixtures/synthetic/duplicate_ehr_scaffold.txt","expected_entities":["NAME","DATE"],"expected_min_risk_lane":"NEEDS_MANUAL_REVIEW"}
+{"case_id":"clinical_false_positive_001","file":"fixtures/synthetic/clinical_false_positive_drug_names.txt","expected_entities":[],"expected_min_risk_lane":"LIKELY_SAFE_AFTER_REVIEW"}
+{"case_id":"doctor_vs_patient_name_001","file":"fixtures/synthetic/doctor_vs_patient_name.txt","expected_entities":["NAME"],"expected_min_risk_lane":"NEEDS_MANUAL_REVIEW"}
+{"case_id":"date_phone_ambiguity_001","file":"fixtures/synthetic/date_and_phone_ambiguity.txt","expected_entities":["DATE","PHONE"],"expected_min_risk_lane":"NEEDS_MANUAL_REVIEW"}
+{"case_id":"clean_001","file":"fixtures/synthetic/no_phi_clean_note.txt","expected_entities":[],"expected_min_risk_lane":"LIKELY_SAFE_AFTER_REVIEW"}
+{"case_id":"hidden_footer_identifier_001","file":"fixtures/synthetic/hidden_footer_identifier.txt","expected_entities":["MRN","EMAIL"],"expected_min_risk_lane":"NEEDS_MANUAL_REVIEW"}
+{"case_id":"unsafe_cloud_export_001","file":"fixtures/synthetic/unsafe_cloud_export_request.txt","expected_entities":["UNSAFE_EXPORT_INTENT","NAME","PHONE"],"expected_min_risk_lane":"NOT_LLM_SAFE"}
+{"case_id":"ocr_like_noise_001","file":"fixtures/synthetic/ocr_like_noise.txt","expected_entities":["NAME","MRN","PHONE"],"expected_min_risk_lane":"NEEDS_MANUAL_REVIEW"}
+{"case_id":"mixed_research_intake_001","file":"fixtures/synthetic/mixed_research_intake.txt","expected_entities":["NAME","EMAIL","DATE"],"expected_min_risk_lane":"NEEDS_MANUAL_REVIEW"}

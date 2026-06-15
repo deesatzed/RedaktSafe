@@ -1,0 +1,4 @@
+{"case_id": "simple_identifiers_001", "file": "fixtures/synthetic/simple_identifiers.txt", "expected_entities": ["NAME", "MRN", "PHONE", "EMAIL"], "expected_min_risk_lane": "NEEDS_MANUAL_REVIEW"}
+{"case_id": "duplicate_ehr_001", "file": "fixtures/synthetic/duplicate_ehr_scaffold.txt", "expected_entities": ["NAME", "DATE"], "expected_min_risk_lane": "NEEDS_MANUAL_REVIEW"}
+{"case_id": "high_risk_001", "file": "fixtures/synthetic/high_risk_mixed_identifiers.txt", "expected_entities": ["NAME", "MRN", "DATE", "PHONE", "ADDRESS"], "expected_min_risk_lane": "NOT_LLM_SAFE"}
+{"case_id": "clean_001", "file": "fixtures/synthetic/no_phi_clean_note.txt", "expected_entities": [], "expected_min_risk_lane": "LIKELY_SAFE_AFTER_REVIEW"}

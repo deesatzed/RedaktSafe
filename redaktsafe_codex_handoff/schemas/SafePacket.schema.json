@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SafePacket",
+  "type": "object",
+  "required": [
+    "packet_id",
+    "schema_version",
+    "created_at",
+    "source_hash",
+    "redacted_text_hash",
+    "redacted_text",
+    "sections",
+    "residual_risk",
+    "receipt_id"
+  ],
+  "properties": {
+    "packet_id": {
+      "type": "string"
+    },
+    "schema_version": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "source_hash": {
+      "type": "string"
+    },
+    "redacted_text_hash": {
+      "type": "string"
+    },
+    "redacted_text": {
+      "type": "string"
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "detected_entity_summary": {
+      "type": "object"
+    },
+    "residual_risk": {
+      "type": "object"
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "allowed_downstream_uses": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "disallowed_downstream_uses": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "receipt_id": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,37 @@
+# RedaktSafe Decisions
+
+## 2026-06-15: Treat Current Folder as Handoff Workspace, Then Initialize Repo
+
+Status: Accepted
+
+`/Volumes/WS4TB/RedaktSafe` initially contained `GOAL.md`, `RedaktSafe_Codex_Handoff_Master.docx`, and `redaktsafe_codex_handoff/`, but was not a git repository. The build will document that state in `PROGRESS.md`, preserve `redaktsafe_codex_handoff/` as source documentation, then initialize git in this folder so future changes are trackable.
+
+## 2026-06-15: Deterministic Baseline Is Mandatory
+
+Status: Accepted
+
+The default app will use deterministic local detection and redaction without model downloads, API keys, cloud calls, or external services. Optional adapters may be added later, but they cannot weaken or downgrade deterministic findings.
+
+## 2026-06-15: Receipts Exclude Raw Input and Original Span Values
+
+Status: Accepted
+
+Receipts will store hashes, counts, detector metadata, artifact names, risk lanes, policy findings, warnings, and output hashes. They will not contain raw input text or original redacted values. Redaction reports may include span hashes and offsets, but not raw original spans by default.
+
+## 2026-06-15: Strict Mode Fails Closed
+
+Status: Accepted
+
+The CLI `--strict` mode will return a nonzero status when the risk lane is high, uncertain, not LLM-safe, or pipeline-error fail-closed. When safe to do so, inspectable artifacts should still be written for review.
+
+## 2026-06-15: Static UI Served by Local API
+
+Status: Accepted
+
+The first UI is a static local browser interface under `frontend/` served by the FastAPI app. It uses relative local API calls only and avoids a Node/Vite build requirement for the default install and test path.
+
+## 2026-06-15: Optional Adapters Are Unavailable Stubs Until Explicitly Enabled
+
+Status: Accepted
+
+OpenMed, redaktorg, Agent Pidgin, Sentinel, and MLX/local model integrations are represented by protocol-compatible unavailable stubs. The deterministic baseline remains default and the app works when those backends are absent.
