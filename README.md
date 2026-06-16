@@ -22,6 +22,7 @@ python -m redaktsafe.cli schemas --out /tmp/redaktsafe-schemas
 python -m redaktsafe.cli packet fixtures/synthetic/simple_identifiers.txt --out /tmp/redaktsafe-simple
 python -m redaktsafe.cli packet fixtures/synthetic/high_risk_mixed_identifiers.txt --out /tmp/redaktsafe-risk --strict
 python -m redaktsafe.cli eval --fixtures evals/cases.jsonl --out /tmp/redaktsafe-eval
+python -m redaktsafe.cli benchmark list
 python -m redaktsafe.cli serve --host 127.0.0.1 --port 8765
 ```
 
@@ -46,6 +47,12 @@ http://127.0.0.1:8765/
 - High-risk or uncertain outputs fail closed in strict mode.
 - Synthetic fixtures are for testing only and are not real patient data.
 - Optional adapters are off by default and are not required for tests, CLI, API, UI, or evaluation.
+
+## Benchmarks
+
+RedaktSafe includes optional benchmark adapters for NVIDIA Nemotron-PII, AI4Privacy PII Masking 300k, Kaggle/PIILO PII Data Detection, Presidio-generated samples, and n2c2/i2b2 2014 de-identification exports.
+
+Benchmark datasets are not downloaded by default and are not required for tests. See `docs/BENCHMARKS.md`.
 
 ## Generated Artifacts
 

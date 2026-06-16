@@ -7,6 +7,7 @@ from pathlib import Path
 
 from redaktsafe import __version__
 from redaktsafe.artifacts import write_artifacts
+from redaktsafe.benchmarks import list_benchmarks, run_benchmark
 from redaktsafe.contracts import PipelineConfig, schema_models
 from redaktsafe.eval import run_eval
 from redaktsafe.pipeline import run_packet_pipeline, strict_should_fail
@@ -48,6 +49,17 @@ def _build_parser() -> argparse.ArgumentParser:
     eval_parser.add_argument("--fixtures", required=True, type=Path)
     eval_parser.add_argument("--out", required=True, type=Path)
     eval_parser.set_defaults(handler=_eval)
+
+    benchmark_parser = subparsers.add_parser("benchmark", help="Run optional external PII benchmark datasets.")
+    benchmark_subparsers = benchmark_parser.add_subparsers(dest="benchmark_command")
+    benchmark_list = benchmark_subparsers.add_parser("list", help="List supported benchmark adapters.")
+    benchmark_list.set_defaults(handler=_benchmark_list)
+    benchmark_run = benchmark_subparsers.add_parser("run", help="Run a local benchmark export through RedaktSafe.")
+    benchmark_run.add_argument("--source", required=True)
+    benchmark_run.add_argument("--input", required=True, type=Path)
+    benchmark_run.add_argument("--out", required=True, type=Path)
+    benchmark_run.add_argument("--limit", type=int)
+    benchmark_run.set_defaults(handler=_benchmark_run)
 
     serve_parser = subparsers.add_parser("serve", help="Run the local API and browser UI.")
     serve_parser.add_argument("--host", default="127.0.0.1")
@@ -110,6 +122,29 @@ def _eval(args: argparse.Namespace) -> int:
         "receipt_completeness_rate",
         "no_raw_input_violations",
     ]}, indent=2, sort_keys=True))
+    return 1 if results["unsafe_pass_count"] else 0
+
+
+def _benchmark_list(_args: argparse.Namespace) -> int:
+    print(json.dumps(list_benchmarks(), indent=2, sort_keys=True))
+    return 0
+
+
+def _benchmark_run(args: argparse.Namespace) -> int:
+    results = run_benchmark(args.source, args.input, args.out, limit=args.limit)
+    summary_keys = [
+        "benchmark_id",
+        "case_count",
+        "recall",
+        "precision",
+        "false_positive_count",
+        "unsafe_pass_count",
+        "latency_ms_p50",
+        "artifact_completeness_rate",
+        "receipt_completeness_rate",
+        "no_raw_input_violations",
+    ]
+    print(json.dumps({key: results[key] for key in summary_keys}, indent=2, sort_keys=True))
     return 1 if results["unsafe_pass_count"] else 0
 
 

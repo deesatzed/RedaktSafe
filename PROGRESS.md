@@ -114,3 +114,36 @@ Residual risks and deferred work:
 - Optional real OpenMed, redaktorg, Agent Pidgin, Sentinel, and MLX integrations are stubs only. This is intentional; default operation remains deterministic and local.
 - The UI is static and local-first, not a production deployment.
 - The detector baseline is deterministic and synthetic-fixture-oriented; users still need to validate against their own data and policies.
+
+## 2026-06-16 External PII Benchmark Adapters
+
+Implemented:
+
+- Added `src/redaktsafe/benchmarks.py`.
+- Added `redaktsafe benchmark list`.
+- Added `redaktsafe benchmark run --source SOURCE --input PATH --out PATH [--limit N]`.
+- Added benchmark registry entries for:
+  - `nemotron_pii`
+  - `ai4privacy_300k`
+  - `kaggle_pii`
+  - `presidio_synthetic`
+  - `n2c2_2014_deid`
+- Added local export loaders for JSONL/JSON span datasets, Kaggle token-label JSON, and simple n2c2-style XML.
+- Added `docs/BENCHMARKS.md`.
+
+Safety posture:
+
+- Benchmark datasets are user-provided local inputs.
+- RedaktSafe does not download benchmark datasets automatically.
+- Default tests remain offline and credential-free.
+
+Verification so far:
+
+- `python -m pytest tests/test_benchmarks.py -q` -> 7 passed.
+- `python -m pytest` -> 35 passed.
+- `python -m redaktsafe.cli benchmark list` -> listed 5 supported benchmark adapters.
+- `python -m redaktsafe.cli benchmark run --source presidio_synthetic --input /tmp/redaktsafe-presidio-bench-sample.jsonl --out /tmp/redaktsafe-benchmark-presidio` -> 1 local sample case, recall 1.0, precision 1.0, false positives 0, unsafe-pass count 0, no raw input violations 0.
+- `git diff --check` -> exited 0.
+- Standard CLI/eval proof rerun -> doctor ok, console doctor ok, 7 schemas exported, simple packet `NEEDS_MANUAL_REVIEW`, high-risk strict packet `NOT_LLM_SAFE` with strict return code `3`, eval recall 1.0, precision 1.0, unsafe-pass count 0.
+- Receipt raw-hit inspection for simple and high-risk runs -> no checked raw identifier hits.
+- Contextual safety phrase check -> no forbidden claim violations.

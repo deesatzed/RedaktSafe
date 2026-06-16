@@ -10,13 +10,13 @@ Current verified state:
 - Git repository initialized after documenting that the folder began as a handoff workspace.
 - `redaktsafe_codex_handoff/` remains preserved as source documentation.
 - Python package and CLI named `redaktsafe` implemented.
-- Deterministic local redaction, packet generation, schema export, evaluation harness, FastAPI service, static local UI, adapter stubs, fake model hook, and benchmark payload helper implemented.
+- Deterministic local redaction, packet generation, schema export, evaluation harness, external benchmark adapters, FastAPI service, static local UI, adapter stubs, fake model hook, and benchmark payload helper implemented.
 - Generated local run artifacts are gitignored through `.redaktsafe_runs/`.
 - Default operation requires no API keys, credentials, model downloads, GPU, cloud service, or external network calls.
 
 Latest verification evidence:
 
-- `python -m pytest` -> 28 passed.
+- `python -m pytest` -> 35 passed.
 - `python -m redaktsafe.cli doctor` -> status ok.
 - `redaktsafe doctor` -> status ok.
 - `python -m redaktsafe.cli schemas --out /tmp/redaktsafe-schemas` -> wrote 7 schemas.
@@ -24,6 +24,8 @@ Latest verification evidence:
 - `python -m redaktsafe.cli packet fixtures/synthetic/high_risk_mixed_identifiers.txt --out /tmp/redaktsafe-risk --strict` -> wrote all required artifacts and returned strict-mode code `3` with risk lane `NOT_LLM_SAFE`.
 - Receipt raw-hit inspection for the simple and high-risk runs -> no checked raw identifiers found in `receipt.json`.
 - `python -m redaktsafe.cli eval --fixtures evals/cases.jsonl --out /tmp/redaktsafe-eval` -> 10 cases, recall 1.0, precision 1.0, false positives 0, unsafe-pass count 0, artifact completeness 1.0, receipt completeness 1.0, no raw input violations 0.
+- `python -m redaktsafe.cli benchmark list` -> listed optional adapters for NVIDIA Nemotron-PII, AI4Privacy PII Masking 300k, Kaggle/PIILO PII Data Detection, Presidio-style synthetic exports, and n2c2/i2b2 2014 de-identification exports.
+- `python -m redaktsafe.cli benchmark run --source presidio_synthetic --input /tmp/redaktsafe-presidio-bench-sample.jsonl --out /tmp/redaktsafe-benchmark-presidio` -> local sample benchmark ran with recall 1.0, precision 1.0, false positives 0, unsafe-pass count 0, artifact completeness 1.0, receipt completeness 1.0, no raw input violations 0.
 - API/UI served locally at `http://127.0.0.1:8765/`; `/health` returned healthy status.
 - Desktop and mobile UI smoke tests passed using local Chrome Beta through Playwright.
 - Safety phrase check found no forbidden compliance or safety overclaims in README, docs, frontend, or generated default artifacts.
@@ -33,6 +35,7 @@ Latest verification evidence:
 Residual/deferred work:
 
 - Real OpenMed, redaktorg, Agent Pidgin, Sentinel, and MLX integrations remain optional deferred work represented by stubs.
+- Full external benchmark dataset downloads are user-managed and not part of default tests.
 - The UI is a local static workbench, not a production deployment.
 - The detector baseline is deterministic and synthetic-fixture-oriented; users must validate against their own data and policies before operational use.
 

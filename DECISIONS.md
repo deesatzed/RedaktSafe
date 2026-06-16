@@ -35,3 +35,9 @@ The first UI is a static local browser interface under `frontend/` served by the
 Status: Accepted
 
 OpenMed, redaktorg, Agent Pidgin, Sentinel, and MLX/local model integrations are represented by protocol-compatible unavailable stubs. The deterministic baseline remains default and the app works when those backends are absent.
+
+## 2026-06-16: External PII Benchmarks Are Optional Local Inputs
+
+Status: Accepted
+
+RedaktSafe will support standard PII benchmark adapters for local exports from NVIDIA Nemotron-PII, AI4Privacy PII Masking 300k, Kaggle/PIILO PII Data Detection, Presidio-generated samples, and n2c2/i2b2 2014 de-identification data. The app will not automatically download these datasets or require benchmark credentials in default tests. Benchmark commands normalize user-provided local exports into the existing eval harness.

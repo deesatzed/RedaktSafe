@@ -16,10 +16,11 @@ Source: `redaktsafe_codex_handoff/tasks/codex_task_queue.yml`.
 - P5-001: Implement minimal local UI.
 - P6-001: Add optional adapter interfaces.
 - P7-001: Add fake model adapter tests and benchmark hooks.
+- P8-001: Add optional external PII benchmark adapters.
 
 ## Active
 
-- Final proof sweep: run required verification commands, inspect safety language, run diff checks, and update final progress evidence.
+None.
 
 ## Pending
 
