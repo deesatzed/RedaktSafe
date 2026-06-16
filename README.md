@@ -8,6 +8,8 @@ RedaktSafe is deidentification-assistive software. It does not replace human rev
 
 The local MVP is implemented from `redaktsafe_codex_handoff/`. It includes the deterministic CLI and packet pipeline, schema-backed artifacts, synthetic eval harness, optional benchmark adapters, local FastAPI service, static local UI, and an opt-in Hugging Face token-classification adapter. The default path remains offline and deterministic; model detection is optional and additive.
 
+Opt-in learning mode now supports encrypted local snippet retention, reviewed correction capture, error-severity scoring, and human-review queue routing. It does not auto-promote rules, alter detector behavior, or fine-tune models.
+
 ## Install
 
 ```bash
@@ -38,6 +40,23 @@ python -m redaktsafe.cli text "Consult completed for Avery Stone." \
 
 Model access tokens can be provided through `HF_TOKEN`, `HUGGING_FACE_HUB_TOKEN`, or `HF_READ` in the environment or local `.env`.
 
+Opt-in local learning correction capture:
+
+```bash
+python -m redaktsafe.cli learning add-correction \
+  --store .redaktsafe_learning \
+  --passphrase "local-passphrase" \
+  --text "Patient DeVries, MRN E1234567." \
+  --span-text "E1234567" \
+  --entity-type MRN \
+  --error-type false_negative \
+  --context-category patient_context \
+  --downstream-exposure external \
+  --detector-disagreement
+
+python -m redaktsafe.cli learning queue --store .redaktsafe_learning
+```
+
 After editable install, the console command is also available:
 
 ```bash
@@ -59,6 +78,7 @@ http://127.0.0.1:8765/
 - High-risk or uncertain outputs fail closed in strict mode.
 - Synthetic fixtures are for testing only and are not real patient data.
 - Optional adapters are off by default and are not required for tests, CLI, API, UI, or evaluation.
+- Learning mode is off by default. When explicitly used, local snippets are encrypted at rest and correction ledgers store hashes and review metadata rather than plaintext snippets.
 
 ## Benchmarks
 

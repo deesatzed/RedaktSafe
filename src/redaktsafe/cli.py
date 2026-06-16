@@ -8,8 +8,9 @@ from pathlib import Path
 from redaktsafe import __version__
 from redaktsafe.artifacts import write_artifacts
 from redaktsafe.benchmarks import list_benchmarks, run_benchmark
-from redaktsafe.contracts import PipelineConfig, schema_models
+from redaktsafe.contracts import LearningContextCategory, LearningErrorType, PipelineConfig, schema_models
 from redaktsafe.eval import run_eval
+from redaktsafe.learning import LearningLedger
 from redaktsafe.pipeline import run_packet_pipeline, strict_should_fail
 
 
@@ -66,6 +67,25 @@ def _build_parser() -> argparse.ArgumentParser:
     benchmark_run.add_argument("--hf-model-id")
     benchmark_run.add_argument("--hf-min-score", type=float, default=0.30)
     benchmark_run.set_defaults(handler=_benchmark_run)
+
+    learning_parser = subparsers.add_parser("learning", help="Manage local opt-in learning corrections.")
+    learning_subparsers = learning_parser.add_subparsers(dest="learning_command")
+    add_correction = learning_subparsers.add_parser("add-correction", help="Append an encrypted local learning correction.")
+    add_correction.add_argument("--store", required=True, type=Path)
+    add_correction.add_argument("--passphrase", required=True)
+    add_correction.add_argument("--text", required=True)
+    add_correction.add_argument("--span-text", required=True)
+    add_correction.add_argument("--entity-type", required=True)
+    add_correction.add_argument("--error-type", required=True, choices=[item.value for item in LearningErrorType])
+    add_correction.add_argument("--context-category", required=True, choices=[item.value for item in LearningContextCategory])
+    add_correction.add_argument("--downstream-exposure", default="local")
+    add_correction.add_argument("--detector-disagreement", action="store_true")
+    add_correction.add_argument("--reviewer-id")
+    add_correction.add_argument("--note")
+    add_correction.set_defaults(handler=_learning_add_correction)
+    learning_queue = learning_subparsers.add_parser("queue", help="List learning corrections ordered by review priority.")
+    learning_queue.add_argument("--store", required=True, type=Path)
+    learning_queue.set_defaults(handler=_learning_queue)
 
     serve_parser = subparsers.add_parser("serve", help="Run the local API and browser UI.")
     serve_parser.add_argument("--host", default="127.0.0.1")
@@ -152,6 +172,29 @@ def _benchmark_run(args: argparse.Namespace) -> int:
     ]
     print(json.dumps({key: results[key] for key in summary_keys}, indent=2, sort_keys=True))
     return 1 if results["unsafe_pass_count"] else 0
+
+
+def _learning_add_correction(args: argparse.Namespace) -> int:
+    ledger = LearningLedger(args.store, passphrase=args.passphrase)
+    correction = ledger.append_correction(
+        text=args.text,
+        span_text=args.span_text,
+        entity_type=args.entity_type,
+        error_type=args.error_type,
+        context_category=args.context_category,
+        downstream_exposure=args.downstream_exposure,
+        detector_disagreement=args.detector_disagreement,
+        reviewer_id=args.reviewer_id,
+        note=args.note,
+    )
+    print(json.dumps(correction.model_dump(mode="json"), indent=2, sort_keys=True))
+    return 0
+
+
+def _learning_queue(args: argparse.Namespace) -> int:
+    ledger = LearningLedger(args.store)
+    print(json.dumps([item.model_dump(mode="json") for item in ledger.review_queue()], indent=2, sort_keys=True))
+    return 0
 
 
 def _serve(args: argparse.Namespace) -> int:

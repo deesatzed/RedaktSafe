@@ -25,6 +25,33 @@ class Severity(str, Enum):
     CRITICAL = "critical"
 
 
+class LearningErrorType(str, Enum):
+    FALSE_NEGATIVE = "false_negative"
+    FALSE_POSITIVE = "false_positive"
+    WRONG_ENTITY_TYPE = "wrong_entity_type"
+    CONTEXTUAL_ALLOW = "contextual_allow"
+    CONTEXTUAL_REDACT = "contextual_redact"
+    UNCERTAIN = "uncertain"
+
+
+class LearningContextCategory(str, Enum):
+    DIRECT_IDENTIFIER = "direct_identifier"
+    PATIENT_CONTEXT = "patient_context"
+    MEDICAL_EPONYM = "medical_eponym"
+    INSTITUTION = "institution"
+    BUILDING_OR_UNIT = "building_or_unit"
+    RESEARCH_LAB = "research_lab"
+    CLEAN_CONTEXT = "clean_context"
+    UNKNOWN = "unknown"
+
+
+class ReviewRoute(str, Enum):
+    AUTO_REDACT = "AUTO_REDACT"
+    REVIEW_REDACT = "REVIEW_REDACT"
+    REVIEW_ALLOW = "REVIEW_ALLOW"
+    AUTO_ALLOW_WITH_TRACE = "AUTO_ALLOW_WITH_TRACE"
+
+
 class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -160,6 +187,44 @@ class PacketRunResult(StrictModel):
     input_profile: InputProfile
 
 
+class LearningScore(StrictModel):
+    score: int = Field(ge=0, le=100)
+    route: ReviewRoute
+    reasons: list[str]
+
+
+class LearningCorrection(StrictModel):
+    correction_id: str
+    created_at: str
+    reviewer_id: str | None = None
+    entity_type: str
+    error_type: LearningErrorType
+    context_category: LearningContextCategory
+    downstream_exposure: str
+    detector_disagreement: bool = False
+    recurrence_count: int = 0
+    severity_score: int = Field(ge=0, le=100)
+    route: ReviewRoute
+    source_hash: str
+    span_hash: str
+    snippet_ref: str | None = None
+    note_hash: str | None = None
+    promoted: bool = False
+
+
+class LearningQueueItem(StrictModel):
+    correction_id: str
+    severity_score: int = Field(ge=0, le=100)
+    route: ReviewRoute
+    entity_type: str
+    error_type: LearningErrorType
+    context_category: LearningContextCategory
+    downstream_exposure: str
+    detector_disagreement: bool
+    recurrence_count: int
+    created_at: str
+
+
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
@@ -173,4 +238,6 @@ def schema_models() -> dict[str, type[BaseModel]]:
         "ResidualRiskAssessment": ResidualRiskAssessment,
         "SafePacket": SafePacket,
         "ValidationSummary": ValidationSummary,
+        "LearningCorrection": LearningCorrection,
+        "LearningQueueItem": LearningQueueItem,
     }

@@ -13,5 +13,6 @@ dist/
 build/
 *.egg-info/
 .redaktsafe_runs/
+.redaktsafe_learning/
 frontend/node_modules/
 frontend/dist/

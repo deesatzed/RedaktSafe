@@ -10,13 +10,13 @@ Current verified state:
 - Git repository initialized after documenting that the folder began as a handoff workspace.
 - `redaktsafe_codex_handoff/` remains preserved as source documentation.
 - Python package and CLI named `redaktsafe` implemented.
-- Deterministic local redaction, opt-in real Hugging Face model detection, packet generation, schema export, evaluation harness, external benchmark adapters, FastAPI service, static local UI, adapter stubs, fake model hook, and benchmark payload helper implemented.
+- Deterministic local redaction, opt-in real Hugging Face model detection, opt-in encrypted local learning correction capture, packet generation, schema export, evaluation harness, external benchmark adapters, FastAPI service, static local UI, adapter stubs, fake model hook, and benchmark payload helper implemented.
 - Generated local run artifacts are gitignored through `.redaktsafe_runs/`.
 - Default operation requires no API keys, credentials, model downloads, GPU, cloud service, or external network calls.
 
 Latest verification evidence:
 
-- `python -m pytest` -> 38 passed.
+- `python -m pytest` -> 47 passed.
 - `python -m redaktsafe.cli doctor` -> status ok.
 - `redaktsafe doctor` -> status ok.
 - `python -m redaktsafe.cli schemas --out /tmp/redaktsafe-schemas` -> wrote 7 schemas.
@@ -32,10 +32,13 @@ Latest verification evidence:
 - Safety phrase check found no forbidden compliance or safety overclaims in README, docs, frontend, or generated default artifacts.
 - Clean-copy install/smoke proof passed in `/tmp/redaktsafe-clean-copy`.
 - `git diff --check` exited 0.
+- `python -m pytest tests/test_learning.py -q` -> 9 passed.
+- `python -m pytest -q` -> 47 passed.
 
 Residual/deferred work:
 
 - Real OpenMed Hugging Face token-classification detection is implemented as opt-in. redaktorg, Agent Pidgin, Sentinel, and MLX integrations remain optional deferred work represented by stubs.
+- Learning mode is implemented only as the first safe slice: encrypted local snippet retention, correction ledger, severity scoring, and review queue. Nightly teacher-model audits, auto-promotion gates, and fine-tuning remain deferred.
 - Full external benchmark dataset downloads are user-managed and not part of default tests.
 - The UI is a local static workbench, not a production deployment.
 - The detector baseline is deterministic and synthetic-fixture-oriented; users must validate against their own data and policies before operational use.

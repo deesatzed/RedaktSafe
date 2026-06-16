@@ -196,3 +196,26 @@ Fresh verification:
 
 - `python -m pytest -q` -> 38 passed.
 - `git diff --check` -> exited 0.
+
+## 2026-06-16 Learning Loop First Slice
+
+Implemented:
+
+- Added opt-in learning contracts for correction type, context category, review route, correction records, and queue items.
+- Added error-severity scoring that ranks the expected cost of an additional classification error from entity sensitivity, error type, context, downstream exposure, detector disagreement, and recurrence.
+- Added review routing for `REVIEW_REDACT`, `REVIEW_ALLOW`, and `AUTO_ALLOW_WITH_TRACE`; high-risk false negatives route to human review.
+- Added encrypted local snippet retention under `.redaktsafe_learning/` with correction JSONL records storing hashes and metadata rather than plaintext snippets.
+- Added `redaktsafe learning add-correction` and `redaktsafe learning queue`.
+
+Safety posture:
+
+- Learning mode is off by default.
+- `.redaktsafe_learning/` is gitignored.
+- Correction ledgers do not store raw snippets or span text.
+- The first learning slice does not auto-promote rules, change packet detector behavior, or fine-tune models.
+
+Verification:
+
+- `python -m pytest tests/test_learning.py -q` -> 9 passed.
+- `python -m pytest -q` -> 47 passed.
+- `git diff --check` -> exited 0.
