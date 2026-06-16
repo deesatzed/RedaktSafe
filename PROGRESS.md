@@ -179,3 +179,20 @@ Verification:
 - `python -m redaktsafe.cli text 'Consult completed for Avery Stone. Email jane@example.com. Phone 617-555-0142.' --out /tmp/redaktsafe-hf-openmed-env-smoke2 --hf-model-id OpenMed/OpenMed-PII-SuperClinical-Large-434M-v1 --hf-min-score 0.20` -> wrote 6 artifacts and detected `NAME`, `EMAIL`, and `PHONE`.
 - `python -m redaktsafe.cli benchmark run --source nemotron_pii --input /tmp/redaktsafe-nemotron-sample.jsonl --out /tmp/redaktsafe-benchmark-nemotron-openmed-cached --hf-model-id OpenMed/OpenMed-PII-SuperClinical-Large-434M-v1 --hf-min-score 0.20` -> case count 5, recall 0.9167, precision 1.0, false positives 0, unsafe-pass count 1, no raw input violations 0, p50 latency about 163 ms after adapter caching.
 - `python -m redaktsafe.cli benchmark run --source ai4privacy_300k --input /tmp/redaktsafe-ai4privacy-sample.jsonl --out /tmp/redaktsafe-benchmark-ai4privacy-openmed --hf-model-id OpenMed/OpenMed-PII-SuperClinical-Large-434M-v1 --hf-min-score 0.20` -> case count 5, recall 0.2, precision 0.3333, false positives 2, unsafe-pass count 1, no raw input violations 0.
+
+## 2026-06-16 Drift Check Against OpenMed Comparison
+
+Finding:
+
+- No material implementation drift from the initial directives was found. The project goal explicitly required deterministic local redaction, schema-backed artifacts, eval metrics, local API/UI, and optional OpenMed/model adapters that remain additive and opt-in.
+- The main drift found was documentation drift: `README.md` still described API, UI, and adapters as future work after those parts had been implemented. The status text was updated to match the verified app state.
+
+Current product distinction:
+
+- OpenMed is the stronger raw model detector/runtime layer.
+- RedaktSafe is the local trust-packet workbench around detection: deterministic baseline, optional model findings, redacted artifacts, receipts, residual-risk language, strict fail-closed behavior, local API/UI, scoped artifact downloads, and benchmark/eval reporting.
+
+Fresh verification:
+
+- `python -m pytest -q` -> 38 passed.
+- `git diff --check` -> exited 0.

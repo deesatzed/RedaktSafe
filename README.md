@@ -6,7 +6,7 @@ RedaktSafe is deidentification-assistive software. It does not replace human rev
 
 ## Current Status
 
-This repository is being built from `redaktsafe_codex_handoff/`. The deterministic CLI and packet pipeline are the first implementation target. API, UI, and optional adapters come after the CLI and evaluation gates pass.
+The local MVP is implemented from `redaktsafe_codex_handoff/`. It includes the deterministic CLI and packet pipeline, schema-backed artifacts, synthetic eval harness, optional benchmark adapters, local FastAPI service, static local UI, and an opt-in Hugging Face token-classification adapter. The default path remains offline and deterministic; model detection is optional and additive.
 
 ## Install
 
