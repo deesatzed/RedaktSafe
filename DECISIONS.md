@@ -65,3 +65,21 @@ Learning audits can create candidate mitigations from reviewed corrections, but 
 Status: Accepted
 
 RedaktSafe now provides a fine-tuning export/dry-run path for reviewed corrections. It reports readiness only when the reviewed correction count meets the configured minimum. It does not train on unreviewed model guesses, and dry-run output is used when correction volume is insufficient.
+
+## 2026-06-16: OpenMed Benchmark Comparison Is Evidence, Not Automatic Promotion
+
+Status: Accepted
+
+RedaktSafe now compares deterministic and optional OpenMed/Hugging Face benchmark runs in one report. Improved recall alone is not enough to promote model-backed behavior. Promotion remains false unless unsafe-pass, no-raw, recall, provenance, and human-review gates pass.
+
+## 2026-06-16: Reviewer UI Captures Corrections Locally
+
+Status: Accepted
+
+The local UI and API can capture learning corrections into `.redaktsafe_learning/`. Corrections require an explicit passphrase, store encrypted snippets, and expose queue/corpus summaries without copying plaintext snippets into ledgers or receipts.
+
+## 2026-06-16: Taxonomy Expansion Is Additive
+
+Status: Accepted
+
+RedaktSafe expands normalization and deterministic detection for `ID`, `USERNAME`, `INSTITUTION`, `LAB`, `DEPARTMENT`, `BUILDING`, and `PROVIDER`. These entity types are additive and must not weaken existing deterministic structured-identifier findings such as MRN, SSN, email, phone, and address.

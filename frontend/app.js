@@ -7,6 +7,10 @@ const limitations = document.querySelector("#limitations");
 const redactedText = document.querySelector("#redactedText");
 const packetButton = document.querySelector("#packetButton");
 const downloads = document.querySelector("#downloads");
+const learningSubmitButton = document.querySelector("#learningSubmitButton");
+const learningQueueButton = document.querySelector("#learningQueueButton");
+const learningStatus = document.querySelector("#learningStatus");
+const learningQueue = document.querySelector("#learningQueue");
 
 const demoText = `Name: Maria Rivera
 MRN: MRN-992188
@@ -63,6 +67,40 @@ packetButton.addEventListener("click", async () => {
   }
   renderDownloads(await response.json());
 });
+
+learningSubmitButton.addEventListener("click", async () => {
+  const text = inputText.value.trim();
+  const passphrase = document.querySelector("#learningPassphrase").value;
+  const spanText = document.querySelector("#learningSpanText").value.trim();
+  if (!text || !passphrase || !spanText) {
+    renderLearningStatus("Input text, passphrase, and span text are required.");
+    return;
+  }
+  const payload = {
+    passphrase,
+    text,
+    span_text: spanText,
+    entity_type: document.querySelector("#learningEntityType").value.trim(),
+    error_type: document.querySelector("#learningErrorType").value,
+    context_category: document.querySelector("#learningContextCategory").value,
+    downstream_exposure: document.querySelector("#learningExposure").value.trim() || "local",
+    detector_disagreement: document.querySelector("#learningDisagreement").checked
+  };
+  const response = await fetch("/api/learning/corrections", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(payload)
+  });
+  if (!response.ok) {
+    renderLearningStatus(`Correction failed with status ${response.status}`);
+    return;
+  }
+  const correction = await response.json();
+  renderLearningStatus(`Saved ${correction.entity_type} correction as ${correction.route}.`);
+  await refreshLearningQueue();
+});
+
+learningQueueButton.addEventListener("click", refreshLearningQueue);
 
 inputText.addEventListener("input", updateSize);
 updateSize();
@@ -127,6 +165,23 @@ function renderError(message) {
   warnings.appendChild(item);
 }
 
+function renderLearningStatus(message) {
+  learningStatus.innerHTML = "";
+  const item = document.createElement("p");
+  item.textContent = message;
+  learningStatus.appendChild(item);
+}
+
+async function refreshLearningQueue() {
+  const response = await fetch("/api/learning/queue");
+  if (!response.ok) {
+    renderLearningStatus(`Queue refresh failed with status ${response.status}`);
+    return;
+  }
+  const payload = await response.json();
+  learningQueue.textContent = JSON.stringify(payload, null, 2);
+}
+
 function renderEmpty() {
   riskLane.textContent = "Not run";
   riskLane.className = "risk";
@@ -146,4 +201,3 @@ function escapeHtml(value) {
     "'": "&#039;"
   })[char]);
 }
-

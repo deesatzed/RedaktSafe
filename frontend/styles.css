@@ -79,7 +79,8 @@ h3 {
   grid-template-columns: minmax(300px, 0.95fr) minmax(360px, 1.15fr) minmax(260px, 0.8fr);
   grid-template-areas:
     "input result artifacts"
-    "review review review";
+    "review review review"
+    "learning learning learning";
   gap: 14px;
   padding: 14px;
 }
@@ -109,6 +110,10 @@ h3 {
   grid-area: review;
 }
 
+.learning-panel {
+  grid-area: learning;
+}
+
 .panel-head {
   display: flex;
   justify-content: space-between;
@@ -132,6 +137,41 @@ textarea {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 10px;
+}
+
+.learning-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.learning-grid label {
+  display: grid;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.learning-grid input,
+.learning-grid select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 8px 9px;
+  color: var(--ink);
+  background: #ffffff;
+}
+
+.learning-grid .checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 20px;
+}
+
+.learning-grid .checkbox input {
+  width: auto;
 }
 
 button,
@@ -255,11 +295,15 @@ pre {
       "input"
       "result"
       "artifacts"
-      "review";
+      "review"
+      "learning";
   }
 
   .summary-grid {
     grid-template-columns: 1fr;
   }
-}
 
+  .learning-grid {
+    grid-template-columns: 1fr;
+  }
+}

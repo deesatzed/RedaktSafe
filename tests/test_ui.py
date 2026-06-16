@@ -18,8 +18,13 @@ def test_ui_files_contain_required_workflow_and_no_remote_calls():
     assert "download" in combined.lower()
     assert "residual" in combined.lower()
     assert "review" in combined.lower()
+    assert "Learning Corrections" in combined
+    assert "false negative" in combined.lower()
+    assert "context category" in combined.lower()
     assert "fetch(\"/api/preflight\"" in app_js
     assert "fetch(\"/api/packet\"" in app_js
+    assert "fetch(\"/api/learning/corrections\"" in app_js
+    assert "fetch(\"/api/learning/queue\"" in app_js
     assert "http://" not in app_js
     assert "https://" not in app_js
     assert "analytics" not in combined.lower()
@@ -36,4 +41,3 @@ def test_api_serves_ui_and_static_assets(tmp_path):
     assert app_js.status_code == 200
     assert styles.status_code == 200
     assert "RedaktSafe Trust Packet Workbench" in index.text
-

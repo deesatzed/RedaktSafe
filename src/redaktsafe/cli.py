@@ -7,7 +7,7 @@ from pathlib import Path
 
 from redaktsafe import __version__
 from redaktsafe.artifacts import write_artifacts
-from redaktsafe.benchmarks import list_benchmarks, run_benchmark
+from redaktsafe.benchmarks import compare_benchmark_backends, list_benchmarks, run_benchmark
 from redaktsafe.contracts import LearningContextCategory, LearningErrorType, PipelineConfig, schema_models
 from redaktsafe.eval import run_eval
 from redaktsafe.learning import LearningLedger, export_finetuning_dataset, run_context_canary_eval, run_learning_audit
@@ -67,6 +67,14 @@ def _build_parser() -> argparse.ArgumentParser:
     benchmark_run.add_argument("--hf-model-id")
     benchmark_run.add_argument("--hf-min-score", type=float, default=0.30)
     benchmark_run.set_defaults(handler=_benchmark_run)
+    benchmark_compare = benchmark_subparsers.add_parser("compare", help="Compare deterministic and optional model benchmark backends.")
+    benchmark_compare.add_argument("--source", required=True)
+    benchmark_compare.add_argument("--input", required=True, type=Path)
+    benchmark_compare.add_argument("--out", required=True, type=Path)
+    benchmark_compare.add_argument("--limit", type=int)
+    benchmark_compare.add_argument("--hf-model-id")
+    benchmark_compare.add_argument("--hf-min-score", type=float, default=0.30)
+    benchmark_compare.set_defaults(handler=_benchmark_compare)
 
     learning_parser = subparsers.add_parser("learning", help="Manage local opt-in learning corrections.")
     learning_subparsers = learning_parser.add_subparsers(dest="learning_command")
@@ -86,11 +94,15 @@ def _build_parser() -> argparse.ArgumentParser:
     learning_queue = learning_subparsers.add_parser("queue", help="List learning corrections ordered by review priority.")
     learning_queue.add_argument("--store", required=True, type=Path)
     learning_queue.set_defaults(handler=_learning_queue)
+    learning_corpus = learning_subparsers.add_parser("corpus", help="Summarize reviewed learning correction corpus coverage.")
+    learning_corpus.add_argument("--store", required=True, type=Path)
+    learning_corpus.set_defaults(handler=_learning_corpus)
     learning_audit = learning_subparsers.add_parser("audit", help="Run local learning audit when activity exists.")
     learning_audit.add_argument("--store", required=True, type=Path)
     learning_audit.add_argument("--out", required=True, type=Path)
     learning_audit.add_argument("--if-due", action="store_true")
     learning_audit.add_argument("--interval-hours", type=int, default=24)
+    learning_audit.add_argument("--teacher-model-id")
     learning_audit.set_defaults(handler=_learning_audit)
     learning_export = learning_subparsers.add_parser("export-finetune", help="Export reviewed corrections for fine-tuning or dry-run readiness.")
     learning_export.add_argument("--store", required=True, type=Path)
@@ -190,6 +202,13 @@ def _benchmark_run(args: argparse.Namespace) -> int:
     return 1 if results["unsafe_pass_count"] else 0
 
 
+def _benchmark_compare(args: argparse.Namespace) -> int:
+    config = _config_from_args(args) if args.hf_model_id else None
+    result = compare_benchmark_backends(args.source, args.input, args.out, limit=args.limit, model_config=config)
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
 def _learning_add_correction(args: argparse.Namespace) -> int:
     ledger = LearningLedger(args.store, passphrase=args.passphrase)
     correction = ledger.append_correction(
@@ -213,12 +232,22 @@ def _learning_queue(args: argparse.Namespace) -> int:
     return 0
 
 
+def _learning_corpus(args: argparse.Namespace) -> int:
+    ledger = LearningLedger(args.store)
+    print(json.dumps(ledger.corpus_summary(), indent=2, sort_keys=True))
+    return 0
+
+
 def _learning_audit(args: argparse.Namespace) -> int:
+    from redaktsafe.learning import UnavailableTeacherAuditAdapter
+
+    teacher_adapter = UnavailableTeacherAuditAdapter(args.teacher_model_id) if getattr(args, "teacher_model_id", None) else None
     report = run_learning_audit(
         store=args.store,
         out_dir=args.out,
         if_due=args.if_due,
         interval_hours=args.interval_hours,
+        teacher_adapter=teacher_adapter,
     )
     print(json.dumps(report.model_dump(mode="json"), indent=2, sort_keys=True))
     return 0

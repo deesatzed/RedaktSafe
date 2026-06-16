@@ -23,3 +23,23 @@ Address: 123 Oak Street, Boston MA
     entity_types = {span.entity_type for span in detect(text)}
     assert {"NAME", "MRN", "DATE", "PHONE", "ADDRESS"}.issubset(entity_types)
 
+
+def test_detects_expanded_entity_taxonomy_without_weakening_structured_identifiers():
+    text = (
+        "Provider Dr. Ada Lovelace works in Cardiology Department at Johns Hopkins Hospital. "
+        "Specimen went to DeVries Lab in East Tower. Username: alovelace. Passport: X12345678. "
+        "MRN E4567890."
+    )
+
+    entity_types = {span.entity_type for span in detect(text)}
+
+    assert {
+        "PROVIDER",
+        "DEPARTMENT",
+        "INSTITUTION",
+        "LAB",
+        "BUILDING",
+        "USERNAME",
+        "ID",
+        "MRN",
+    }.issubset(entity_types)

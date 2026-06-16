@@ -67,6 +67,15 @@ The app has four layers:
 - Add fine-tuning export/dry-run path that refuses readiness when reviewed correction volume is below the configured minimum.
 - Verification: learning tests, canary command, audit command, fine-tuning dry-run, no-plaintext scans, and full test suite.
 
+### Phase 8: Benchmark Recall, Reviewer UI, Teacher Adapter, and Taxonomy
+
+- Add benchmark backend comparison for deterministic-only vs optional model-assisted runs.
+- Add local reviewer UI and API endpoints for correction capture and review queue inspection.
+- Add correction-corpus coverage summary.
+- Add optional teacher-audit adapter injection and unavailable-model metadata.
+- Expand taxonomy normalization/detection for IDs, usernames, institutions, labs, departments, buildings/units, provider names, and ambiguous eponyms.
+- Verification: benchmark comparison tests, detector taxonomy tests, learning API/UI tests, teacher-adapter tests, full test suite, OpenMed sample comparison commands.
+
 ## First Implementation Batch
 
 The first batch should complete Phase 0 and as much of Phases 1 and 2 as practical without skipping tests:

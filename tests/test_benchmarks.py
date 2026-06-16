@@ -2,11 +2,26 @@ import json
 
 from redaktsafe.benchmarks import (
     BENCHMARK_SPECS,
+    compare_benchmark_backends,
     convert_benchmark_to_eval,
     load_benchmark_records,
     run_benchmark,
 )
 from redaktsafe.cli import main
+from redaktsafe.adapters.hf_token_classifier_adapter import HuggingFaceTokenClassifierAdapter
+from redaktsafe.contracts import PipelineConfig
+
+
+class FakeNamePipeline:
+    def __call__(self, text, aggregation_strategy=None):
+        return [
+            {
+                "entity_group": "PERSON",
+                "start": text.index("Avery Stone"),
+                "end": text.index("Avery Stone") + len("Avery Stone"),
+                "score": 0.91,
+            }
+        ]
 
 
 def test_benchmark_registry_includes_external_pii_benchmarks():
@@ -156,3 +171,40 @@ def test_benchmark_cli_lists_and_runs_local_sample(tmp_path, capsys):
     assert main(["benchmark", "run", "--source", "presidio_synthetic", "--input", str(source), "--out", str(tmp_path / "out")]) == 0
     assert (tmp_path / "out" / "benchmark_results.json").exists()
 
+
+def test_compare_benchmark_backends_reports_model_delta(tmp_path):
+    source = tmp_path / "sample.jsonl"
+    source.write_text(
+        json.dumps(
+            {
+                "id": "m1",
+                "text": "Consult completed for Avery Stone.",
+                "spans": [{"start": 22, "end": 33, "label": "NAME"}],
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    model_config = PipelineConfig(
+        adapters_enabled=["hf_token_classifier"],
+        model_adapters={"hf_token_classifier": {"model_id": "fake/pii-model"}},
+    )
+
+    result = compare_benchmark_backends(
+        "presidio_synthetic",
+        source,
+        tmp_path / "compare",
+        model_config=model_config,
+        adapter_factories={
+            "hf_token_classifier": lambda _settings: HuggingFaceTokenClassifierAdapter(
+                model_id="fake/pii-model",
+                pipeline_factory=lambda _model_id, _token: FakeNamePipeline(),
+            )
+        },
+    )
+
+    assert result["deterministic"]["recall"] == 0.0
+    assert result["model"]["recall"] == 1.0
+    assert result["delta"]["recall"] == 1.0
+    assert result["promotion_gate"]["promotion_allowed"] is False
+    assert (tmp_path / "compare" / "benchmark_comparison.json").exists()

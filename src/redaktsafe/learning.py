@@ -266,6 +266,22 @@ class LearningLedger:
         ]
         return sorted(items, key=lambda item: (-item.severity_score, item.created_at))
 
+    def corpus_summary(self) -> dict[str, Any]:
+        corrections = self.list_corrections()
+        context_counts = {context.value: 0 for context in LearningContextCategory}
+        entity_counts: dict[str, int] = {}
+        error_counts = {error.value: 0 for error in LearningErrorType}
+        for correction in corrections:
+            context_counts[correction.context_category.value] += 1
+            entity_counts[correction.entity_type] = entity_counts.get(correction.entity_type, 0) + 1
+            error_counts[correction.error_type.value] += 1
+        return {
+            "correction_count": len(corrections),
+            "context_counts": context_counts,
+            "entity_counts": dict(sorted(entity_counts.items())),
+            "error_counts": error_counts,
+        }
+
     def audit_state(self) -> dict[str, Any]:
         if not self.audit_state_path.exists():
             return {}
@@ -338,6 +354,7 @@ def run_learning_audit(
     out_dir: str | Path,
     if_due: bool = False,
     interval_hours: int = 24,
+    teacher_adapter: Any | None = None,
 ) -> LearningAuditReport:
     ledger = LearningLedger(store)
     corrections = ledger.list_corrections()
@@ -353,6 +370,7 @@ def run_learning_audit(
                 new_corrections=[],
                 skipped=True,
                 skip_reason=skip_reason,
+                teacher_adapter=teacher_adapter,
             )
             _write_audit_artifacts(report, out_dir)
             return report
@@ -363,6 +381,7 @@ def run_learning_audit(
         new_corrections=new_corrections,
         skipped=False,
         skip_reason=None,
+        teacher_adapter=teacher_adapter,
     )
     _write_audit_artifacts(report, out_dir)
     ledger.write_audit_state(report)
@@ -458,10 +477,12 @@ def _audit_report(
     new_corrections: list[LearningCorrection],
     skipped: bool,
     skip_reason: str | None,
+    teacher_adapter: Any | None = None,
 ) -> LearningAuditReport:
     canary_results = _run_context_canaries()
     benchmark_gate_results = _benchmark_gate_results(corrections, canary_results)
     candidates = [] if skipped else _candidate_mitigations(new_corrections)
+    teacher_summary = _teacher_model_summary(teacher_adapter, new_corrections)
     promote = bool(
         candidates
         and benchmark_gate_results["promotion_allowed"]
@@ -477,6 +498,7 @@ def _audit_report(
         new_activity_count=len(new_corrections),
         failure_summary=_failure_summary(new_corrections),
         detector_disagreement_summary=_detector_disagreement_summary(new_corrections),
+        teacher_model_summary=teacher_summary,
         candidate_mitigations=candidates,
         canary_results=canary_results,
         benchmark_gate_results=benchmark_gate_results,
@@ -486,6 +508,33 @@ def _audit_report(
             "reason": "all_gates_passed" if promote else "human_review_or_gate_required",
         },
     )
+
+
+class UnavailableTeacherAuditAdapter:
+    def __init__(self, model_id: str) -> None:
+        self.model_id = model_id
+
+    def metadata(self) -> dict[str, str]:
+        return {
+            "adapter_id": "teacher_model",
+            "status": "unavailable",
+            "model_id": self.model_id,
+            "reason": "Teacher-model inference is optional and not configured for default tests.",
+        }
+
+    def review(self, _corrections: list[LearningCorrection]) -> list[dict[str, str]]:
+        return []
+
+
+def _teacher_model_summary(teacher_adapter: Any | None, corrections: list[LearningCorrection]) -> dict[str, int | float | bool | str]:
+    if teacher_adapter is None:
+        return {"adapter_id": "none", "status": "not_configured", "suggestion_count": 0}
+    metadata = dict(teacher_adapter.metadata())
+    suggestions = teacher_adapter.review(corrections)
+    return {
+        **metadata,
+        "suggestion_count": len(suggestions),
+    }
 
 
 def _candidate_mitigations(corrections: list[LearningCorrection]) -> list[LearningAuditCandidate]:

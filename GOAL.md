@@ -20,13 +20,16 @@ Current verified baseline:
 
 Latest verified commands before this remaining-work goal:
 
-- `python -m pytest tests/test_learning.py -q` -> 14 passed.
-- `python -m pytest -q` -> 52 passed.
+- `python -m pytest tests/test_learning.py -q` -> 17 passed.
+- `python -m pytest -q` -> 58 passed.
 - `python -m redaktsafe.cli schemas --out /tmp/redaktsafe-schemas-final` -> wrote 11 schemas.
 - Learning CLI smoke routed a missed MRN correction to `REVIEW_REDACT` with severity `100`.
 - Learning audit smoke ran with new activity count 2, candidate count 2, canaries passed, promotion allowed false, then skipped the second run with `skip_reason=no_new_activity`.
 - Fine-tuning dry-run reported `ready=false` because reviewed correction count was below the configured minimum.
 - Plaintext scan of `/tmp/redaktsafe-learning-goal-smoke` found no raw snippet hits.
+- OpenMed benchmark comparison on Nemotron improved recall from 0.5833 to 0.9167, but unsafe-pass count remained 1 and promotion stayed false.
+- OpenMed benchmark comparison on AI4Privacy improved recall from 0.0 to 0.2 and unsafe-pass from 4 to 1, but false positives increased and promotion stayed false.
+- Reviewer correction API/UI, correction corpus summary, optional teacher-audit adapter injection, and expanded taxonomy detection are implemented and covered by tests.
 - `git diff --check` exited 0.
 - Safety phrase scan found no forbidden compliance or safety overclaims.
 

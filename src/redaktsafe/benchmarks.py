@@ -7,6 +7,7 @@ import ast
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
+from collections.abc import Callable
 
 from redaktsafe.contracts import PipelineConfig
 from redaktsafe.eval import run_eval
@@ -114,12 +115,42 @@ ENTITY_MAP = {
     "ssn": "SSN",
     "state": "ADDRESS",
     "street_address": "ADDRESS",
+    "organization": "INSTITUTION",
+    "org": "INSTITUTION",
+    "institution": "INSTITUTION",
+    "hospital": "INSTITUTION",
+    "clinic": "INSTITUTION",
+    "department": "DEPARTMENT",
+    "building": "BUILDING",
+    "unit": "BUILDING",
+    "lab": "LAB",
+    "laboratory": "LAB",
+    "provider": "PROVIDER",
+    "doctor": "PROVIDER",
+    "physician": "PROVIDER",
     "url": "URL",
     "url_personal": "URL",
     "username": "USERNAME",
 }
 
-INCLUDED_ENTITIES = {"ADDRESS", "DATE", "EMAIL", "ID", "MRN", "NAME", "NPI", "PHONE", "SSN", "URL", "USERNAME"}
+INCLUDED_ENTITIES = {
+    "ADDRESS",
+    "BUILDING",
+    "DATE",
+    "DEPARTMENT",
+    "EMAIL",
+    "ID",
+    "INSTITUTION",
+    "LAB",
+    "MRN",
+    "NAME",
+    "NPI",
+    "PHONE",
+    "PROVIDER",
+    "SSN",
+    "URL",
+    "USERNAME",
+}
 
 
 def list_benchmarks() -> list[dict[str, str]]:
@@ -172,12 +203,13 @@ def run_benchmark(
     out_dir: str | Path,
     limit: int | None = None,
     config: PipelineConfig | None = None,
+    adapter_factories: dict[str, Callable[[dict], object]] | None = None,
 ) -> dict[str, Any]:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     spec = _spec(benchmark_id)
     manifest = convert_benchmark_to_eval(benchmark_id, input_path, out / "converted", limit=limit)
-    results = run_eval(manifest, out / "eval", config=config)
+    results = run_eval(manifest, out / "eval", config=config, adapter_factories=adapter_factories)
     payload = {
         "benchmark_id": benchmark_id,
         "benchmark": asdict(spec),
@@ -188,6 +220,97 @@ def run_benchmark(
     (out / "benchmark_results.json").write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     shutil.copyfile(out / "eval" / "eval_report.md", out / "benchmark_report.md")
     return payload
+
+
+def compare_benchmark_backends(
+    benchmark_id: str,
+    input_path: str | Path,
+    out_dir: str | Path,
+    limit: int | None = None,
+    model_config: PipelineConfig | None = None,
+    adapter_factories: dict[str, Callable[[dict], object]] | None = None,
+) -> dict[str, Any]:
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    deterministic = run_benchmark(benchmark_id, input_path, out / "deterministic", limit=limit)
+    model = None
+    if model_config is not None:
+        model = run_benchmark(
+            benchmark_id,
+            input_path,
+            out / "model",
+            limit=limit,
+            config=model_config,
+            adapter_factories=adapter_factories,
+        )
+    delta = _metric_delta(deterministic, model) if model else {}
+    gate_passed = bool(
+        model
+        and model["unsafe_pass_count"] <= deterministic["unsafe_pass_count"]
+        and model["recall"] >= deterministic["recall"]
+        and model["no_raw_input_violations"] == 0
+        and deterministic["no_raw_input_violations"] == 0
+        and model["unsafe_pass_count"] == 0
+    )
+    payload = {
+        "benchmark_id": benchmark_id,
+        "deterministic": _comparison_slice(deterministic),
+        "model": _comparison_slice(model) if model else None,
+        "delta": delta,
+        "promotion_gate": {
+            "comparison_gate_passed": gate_passed,
+            "promotion_allowed": False,
+            "reason": "human_review_required_after_comparison" if gate_passed else "unsafe_pass_or_recall_gate_not_met",
+        },
+    }
+    (out / "benchmark_comparison.json").write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    (out / "benchmark_comparison.md").write_text(_comparison_report(payload), encoding="utf-8")
+    return payload
+
+
+def _comparison_slice(result: dict[str, Any] | None) -> dict[str, Any] | None:
+    if result is None:
+        return None
+    return {
+        "case_count": result["case_count"],
+        "recall": result["recall"],
+        "precision": result["precision"],
+        "false_positive_count": result["false_positive_count"],
+        "unsafe_pass_count": result["unsafe_pass_count"],
+        "no_raw_input_violations": result["no_raw_input_violations"],
+    }
+
+
+def _metric_delta(deterministic: dict[str, Any], model: dict[str, Any]) -> dict[str, float | int]:
+    return {
+        "recall": model["recall"] - deterministic["recall"],
+        "precision": model["precision"] - deterministic["precision"],
+        "false_positive_count": model["false_positive_count"] - deterministic["false_positive_count"],
+        "unsafe_pass_count": model["unsafe_pass_count"] - deterministic["unsafe_pass_count"],
+    }
+
+
+def _comparison_report(payload: dict[str, Any]) -> str:
+    lines = [
+        "# RedaktSafe Benchmark Comparison",
+        "",
+        f"- benchmark: `{payload['benchmark_id']}`",
+        f"- promotion allowed: `{payload['promotion_gate']['promotion_allowed']}`",
+        f"- reason: `{payload['promotion_gate']['reason']}`",
+        "",
+        "Model-backed findings are optional and cannot weaken deterministic findings.",
+    ]
+    if payload["model"]:
+        lines.extend(
+            [
+                "",
+                "## Delta",
+                f"- recall: {payload['delta']['recall']:.4f}",
+                f"- precision: {payload['delta']['precision']:.4f}",
+                f"- unsafe-pass count: {payload['delta']['unsafe_pass_count']}",
+            ]
+        )
+    return "\n".join(lines) + "\n"
 
 
 def _spec(benchmark_id: str) -> BenchmarkSpec:

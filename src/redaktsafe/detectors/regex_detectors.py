@@ -21,6 +21,13 @@ PATTERNS: list[tuple[str, str, str, Severity, float]] = [
     ("URL", r"\bhttps?://[^\s)]+", "regex_url", Severity.MEDIUM, 1.0),
     ("IP_ADDRESS", r"\b(?:\d{1,3}\.){3}\d{1,3}\b", "regex_ip_address", Severity.MEDIUM, 0.9),
     ("ADDRESS", r"\b\d{1,6}\s+[A-Z][A-Za-z0-9.'-]*(?:\s+[A-Z][A-Za-z0-9.'-]*){0,5}\s+(?:Street|St|Avenue|Ave|Road|Rd|Drive|Dr|Lane|Ln|Boulevard|Blvd)\b(?:,\s*[A-Z][A-Za-z .-]+)?", "regex_address", Severity.HIGH, 0.9),
+    ("ID", r"(?i)\b(?:passport|driver'?s license|license|member id|employee id|account id|identity card)[:#\s-]+[A-Z0-9][A-Z0-9-]{4,}\b", "regex_id", Severity.CRITICAL, 0.95),
+    ("USERNAME", r"(?i)\b(?:username|user id|login)[:\s-]+[A-Za-z][A-Za-z0-9._-]{2,}\b", "regex_username", Severity.HIGH, 0.9),
+    ("PROVIDER", r"\bDr\.\s+[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\b", "regex_provider", Severity.HIGH, 0.85),
+    ("INSTITUTION", r"\b[A-Z][A-Za-z'&.-]+(?:\s+[A-Z][A-Za-z'&.-]+){0,4}\s+(?:Hospital|Clinic|University|Medical Center|Health System)\b", "regex_institution", Severity.MEDIUM, 0.8),
+    ("LAB", r"\b[A-Z][A-Za-z'&.-]+(?:\s+[A-Z][A-Za-z'&.-]+){0,2}\s+Lab\b", "regex_lab", Severity.MEDIUM, 0.8),
+    ("DEPARTMENT", r"\b(?:Department of\s+[A-Z][A-Za-z'&.-]+|[A-Z][A-Za-z'&.-]+\s+Department)\b", "regex_department", Severity.MEDIUM, 0.8),
+    ("BUILDING", r"\b(?:(?:East|West|North|South|Main)\s+(?:Tower|Building|Wing|Unit)|(?:Building|Unit)\s+[A-Z0-9-]+)\b", "regex_building", Severity.MEDIUM, 0.8),
 ]
 
 NAME_TOKEN = r"(?:[A-Z][a-z]+|[A-Z])"

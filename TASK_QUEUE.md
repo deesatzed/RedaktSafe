@@ -20,6 +20,7 @@ Source: `redaktsafe_codex_handoff/tasks/codex_task_queue.yml`.
 - P9-001: Add opt-in real Hugging Face token-classification model detector.
 - P10-001: Add opt-in encrypted local learning correction ledger and severity-ranked review queue.
 - P11-001: Add 24-hour-if-active learning audit, context canaries, shadow-mode promotion gates, and fine-tuning export/dry-run.
+- P12-001: Add benchmark backend comparison, reviewer correction API/UI, correction corpus summary, optional teacher-adapter injection, and expanded entity taxonomy.
 
 ## Active
 
@@ -31,9 +32,8 @@ None.
 
 ## Deferred Until Baseline Passes
 
-- Optional OpenMed/local model evaluation hooks.
-- Broad adapter integrations.
-- Real teacher-model inference beyond deterministic/fake audit metadata.
+- Broad adapter integrations beyond Hugging Face token classification and teacher-audit injection.
+- Real teacher-model inference beyond unavailable/fake audit adapter metadata.
 - Actual model fine-tuning after enough reviewed corrections exist.
 - Sentinel and Agent Pidgin export bridges.
 - Production deployment, auth, database integration, live EHR integration, or cloud workflows.

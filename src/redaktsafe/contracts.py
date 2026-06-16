@@ -249,6 +249,7 @@ class LearningAuditReport(StrictModel):
     new_activity_count: int
     failure_summary: dict[str, int]
     detector_disagreement_summary: dict[str, int]
+    teacher_model_summary: dict[str, int | float | bool | str]
     candidate_mitigations: list[LearningAuditCandidate]
     canary_results: dict[str, int | float | bool | str]
     benchmark_gate_results: dict[str, int | float | bool | str]

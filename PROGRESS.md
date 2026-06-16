@@ -262,3 +262,48 @@ Verification:
   - Nemotron sample -> recall 0.5833, precision 1.0, unsafe-pass count 1.
   - AI4Privacy sample -> recall 0.0, precision 1.0, unsafe-pass count 4.
 - Safety phrase scan -> no forbidden claim violations.
+
+## 2026-06-16 Next Roadmap Progress
+
+Implemented:
+
+- Added `redaktsafe benchmark compare` for deterministic vs optional model-assisted benchmark evidence.
+- Added benchmark comparison artifacts: `benchmark_comparison.json` and `benchmark_comparison.md`.
+- Added comparison promotion gate fields that keep `promotion_allowed=false` unless comparison gates and human review allow promotion.
+- Expanded deterministic taxonomy detection for:
+  - `ID`
+  - `USERNAME`
+  - `INSTITUTION`
+  - `LAB`
+  - `DEPARTMENT`
+  - `BUILDING`
+  - `PROVIDER`
+- Expanded benchmark/Hugging Face entity normalization for institution/lab/department/building/provider-style labels.
+- Added local reviewer correction API endpoints:
+  - `POST /api/learning/corrections`
+  - `GET /api/learning/queue`
+- Added local UI controls for learning correction capture and queue refresh.
+- Added `redaktsafe learning corpus` for reviewed correction corpus coverage.
+- Added optional teacher-audit adapter injection and unavailable teacher-model metadata path.
+
+Safety posture:
+
+- Benchmark comparison is evidence only. It does not auto-promote model-backed behavior.
+- Reviewer UI correction capture remains local and opt-in.
+- Learned snippets remain encrypted in `.redaktsafe_learning/`.
+- Expanded taxonomy is additive and does not weaken existing deterministic structured-identifier findings.
+
+Verification:
+
+- `python -m pytest tests/test_benchmarks.py tests/test_detectors.py tests/test_api.py tests/test_ui.py tests/test_learning.py -q` -> 38 passed.
+- `python -m pytest -q` -> 58 passed.
+- `python -m redaktsafe.cli schemas --out /tmp/redaktsafe-schemas-next` -> wrote 11 schemas.
+- `python -m redaktsafe.cli benchmark compare --source nemotron_pii --input /tmp/redaktsafe-nemotron-sample.jsonl --out /tmp/redaktsafe-compare-nemotron-openmed --hf-model-id OpenMed/OpenMed-PII-SuperClinical-Large-434M-v1 --hf-min-score 0.20` -> deterministic recall 0.5833, OpenMed recall 0.9167, unsafe-pass count remained 1, promotion allowed false.
+- `python -m redaktsafe.cli benchmark compare --source ai4privacy_300k --input /tmp/redaktsafe-ai4privacy-sample.jsonl --out /tmp/redaktsafe-compare-ai4privacy-openmed --hf-model-id OpenMed/OpenMed-PII-SuperClinical-Large-434M-v1 --hf-min-score 0.20` -> deterministic recall 0.0, OpenMed recall 0.2, unsafe-pass count improved from 4 to 1, false positives increased to 2, promotion allowed false.
+- `python -m redaktsafe.cli learning corpus --store /tmp/redaktsafe-learning-goal-smoke` -> correction count 2, patient-context count 1, medical-eponym count 1.
+- `python -m redaktsafe.cli eval --fixtures evals/cases.jsonl --out /tmp/redaktsafe-eval-final` -> 10 cases, recall 1.0, precision 0.9091, false positives 2, unsafe-pass count 0, no raw input violations 0.
+- FastAPI TestClient smoke -> `/health` healthy and `/` served the `Learning Corrections` section.
+- Local API health check at `http://127.0.0.1:8771/health` -> healthy.
+- TestClient UI check -> `Learning Corrections` section served by `/`.
+- Node Playwright was unavailable in this checkout; frontend coverage is from static UI tests plus FastAPI TestClient smoke.
+- `git diff --check` -> exited 0.

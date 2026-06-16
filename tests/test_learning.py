@@ -369,3 +369,84 @@ def test_learning_cli_canaries_writes_eval_artifact(tmp_path, capsys):
     assert payload["unsafe_pass_count"] == 0
     assert payload["passed"] is True
     assert (out / "learning_canary_results.json").exists()
+
+
+class FakeTeacherAdapter:
+    def metadata(self):
+        return {"adapter_id": "fake_teacher", "status": "available"}
+
+    def review(self, corrections):
+        return [{"correction_id": corrections[0].correction_id, "suggestion": "review MRN context"}] if corrections else []
+
+
+def test_learning_audit_records_optional_teacher_model_summary(tmp_path):
+    store = tmp_path / ".redaktsafe_learning"
+    ledger = LearningLedger(store, passphrase="local-secret")
+    ledger.append_correction(
+        text="Patient DeVries, MRN E1234567.",
+        span_text="E1234567",
+        entity_type="MRN",
+        error_type=LearningErrorType.FALSE_NEGATIVE,
+        context_category=LearningContextCategory.PATIENT_CONTEXT,
+        downstream_exposure="external",
+        detector_disagreement=True,
+    )
+
+    report = run_learning_audit(
+        store=store,
+        out_dir=tmp_path / "audit",
+        if_due=False,
+        teacher_adapter=FakeTeacherAdapter(),
+    )
+
+    assert report.teacher_model_summary["adapter_id"] == "fake_teacher"
+    assert report.teacher_model_summary["suggestion_count"] == 1
+
+
+def test_learning_ledger_corpus_summary_covers_roadmap_categories(tmp_path):
+    ledger = LearningLedger(tmp_path, passphrase="local-secret")
+    for context in [
+        LearningContextCategory.PATIENT_CONTEXT,
+        LearningContextCategory.MEDICAL_EPONYM,
+        LearningContextCategory.INSTITUTION,
+        LearningContextCategory.BUILDING_OR_UNIT,
+        LearningContextCategory.RESEARCH_LAB,
+    ]:
+        ledger.append_correction(
+            text=f"Synthetic correction for {context.value}.",
+            span_text=context.value,
+            entity_type="NAME",
+            error_type=LearningErrorType.FALSE_POSITIVE,
+            context_category=context,
+            downstream_exposure="local",
+        )
+
+    summary = ledger.corpus_summary()
+
+    assert summary["correction_count"] == 5
+    assert summary["context_counts"]["patient_context"] == 1
+    assert summary["context_counts"]["medical_eponym"] == 1
+    assert summary["context_counts"]["institution"] == 1
+    assert summary["context_counts"]["building_or_unit"] == 1
+    assert summary["context_counts"]["research_lab"] == 1
+
+
+def test_learning_cli_corpus_summarizes_reviewed_corrections(tmp_path, capsys):
+    store = tmp_path / ".redaktsafe_learning"
+    ledger = LearningLedger(store, passphrase="local-secret")
+    ledger.append_correction(
+        text="Patient DeVries, MRN E1234567.",
+        span_text="E1234567",
+        entity_type="MRN",
+        error_type=LearningErrorType.FALSE_NEGATIVE,
+        context_category=LearningContextCategory.PATIENT_CONTEXT,
+        downstream_exposure="external",
+        detector_disagreement=True,
+    )
+
+    status = main(["learning", "corpus", "--store", str(store)])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert status == 0
+    assert payload["correction_count"] == 1
+    assert payload["context_counts"]["patient_context"] == 1

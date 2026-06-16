@@ -75,9 +75,47 @@
         </div>
         <pre id="redactedText">Run local preflight to review redacted text.</pre>
       </section>
+
+      <section class="panel learning-panel" aria-labelledby="learning-title">
+        <div class="panel-head">
+          <h2 id="learning-title">Learning Corrections</h2>
+          <button id="learningQueueButton" type="button">Refresh Queue</button>
+        </div>
+        <div class="learning-grid">
+          <label>Passphrase <input id="learningPassphrase" type="password" autocomplete="off"></label>
+          <label>Span Text <input id="learningSpanText" type="text"></label>
+          <label>Entity Type <input id="learningEntityType" type="text" value="MRN"></label>
+          <label>Error Type
+            <select id="learningErrorType">
+              <option value="false_negative">False negative</option>
+              <option value="false_positive">False positive</option>
+              <option value="wrong_entity_type">Wrong entity type</option>
+              <option value="contextual_allow">Contextual allow</option>
+              <option value="contextual_redact">Contextual redact</option>
+              <option value="uncertain">Uncertain</option>
+            </select>
+          </label>
+          <label>Context Category
+            <select id="learningContextCategory">
+              <option value="patient_context">Patient context</option>
+              <option value="medical_eponym">Medical eponym</option>
+              <option value="institution">Institution</option>
+              <option value="building_or_unit">Building or unit</option>
+              <option value="research_lab">Research lab</option>
+              <option value="direct_identifier">Direct identifier</option>
+              <option value="clean_context">Clean context</option>
+              <option value="unknown">Unknown</option>
+            </select>
+          </label>
+          <label>Downstream Exposure <input id="learningExposure" type="text" value="local"></label>
+          <label class="checkbox"><input id="learningDisagreement" type="checkbox"> Detector disagreement</label>
+        </div>
+        <button id="learningSubmitButton" type="button">Save Correction</button>
+        <div id="learningStatus" class="warnings"></div>
+        <pre id="learningQueue">No learning queue loaded.</pre>
+      </section>
     </main>
 
     <script src="/frontend/app.js"></script>
   </body>
 </html>
-

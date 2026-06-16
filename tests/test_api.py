@@ -77,3 +77,27 @@ def test_input_size_limit_is_enforced(tmp_path):
 
     assert response.status_code == 413
 
+
+def test_learning_correction_api_writes_encrypted_local_correction(tmp_path):
+    client = TestClient(create_app(run_root=tmp_path / "runs", learning_root=tmp_path / "learning"))
+
+    response = client.post(
+        "/api/learning/corrections",
+        json={
+            "passphrase": "local-secret",
+            "text": "Patient DeVries, MRN E1234567.",
+            "span_text": "E1234567",
+            "entity_type": "MRN",
+            "error_type": "false_negative",
+            "context_category": "patient_context",
+            "downstream_exposure": "external",
+            "detector_disagreement": True,
+        },
+    )
+    queue = client.get("/api/learning/queue")
+
+    assert response.status_code == 200
+    assert response.json()["route"] == "REVIEW_REDACT"
+    assert "E1234567" not in (tmp_path / "learning" / "corrections.jsonl").read_text(encoding="utf-8")
+    assert queue.status_code == 200
+    assert queue.json()[0]["entity_type"] == "MRN"

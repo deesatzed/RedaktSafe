@@ -22,6 +22,19 @@ ENTITY_MAP = {
     "givenname": "NAME",
     "last_name": "NAME",
     "location": "ADDRESS",
+    "organization": "INSTITUTION",
+    "org": "INSTITUTION",
+    "institution": "INSTITUTION",
+    "hospital": "INSTITUTION",
+    "clinic": "INSTITUTION",
+    "department": "DEPARTMENT",
+    "building": "BUILDING",
+    "unit": "BUILDING",
+    "lab": "LAB",
+    "laboratory": "LAB",
+    "provider": "PROVIDER",
+    "doctor": "PROVIDER",
+    "physician": "PROVIDER",
     "medical_record": "MRN",
     "medical_record_number": "MRN",
     "mrn": "MRN",
@@ -211,7 +224,7 @@ def _normalize_entity(label: str) -> str | None:
     if key in ENTITY_MAP:
         return ENTITY_MAP[key]
     upper = key.upper()
-    if upper in {"ADDRESS", "DATE", "EMAIL", "ID", "MRN", "NAME", "NPI", "PHONE", "SSN", "URL", "USERNAME"}:
+    if upper in {"ADDRESS", "BUILDING", "DATE", "DEPARTMENT", "EMAIL", "ID", "INSTITUTION", "LAB", "MRN", "NAME", "NPI", "PHONE", "PROVIDER", "SSN", "URL", "USERNAME"}:
         return upper
     return None
 
@@ -219,6 +232,6 @@ def _normalize_entity(label: str) -> str | None:
 def _severity_for(entity_type: str) -> Severity:
     if entity_type in {"SSN", "MRN", "NPI", "ID"}:
         return Severity.CRITICAL
-    if entity_type in {"NAME", "EMAIL", "PHONE", "ADDRESS", "USERNAME"}:
+    if entity_type in {"NAME", "EMAIL", "PHONE", "ADDRESS", "USERNAME", "PROVIDER"}:
         return Severity.HIGH
     return Severity.MEDIUM

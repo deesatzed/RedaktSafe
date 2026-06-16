@@ -9,7 +9,8 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from redaktsafe.artifacts import write_artifacts
-from redaktsafe.contracts import PipelineConfig
+from redaktsafe.contracts import LearningContextCategory, LearningErrorType, PipelineConfig
+from redaktsafe.learning import LearningLedger
 from redaktsafe.pipeline import REQUIRED_ARTIFACTS, run_packet_pipeline
 
 ALLOWED_ARTIFACTS = set(REQUIRED_ARTIFACTS)
@@ -22,9 +23,27 @@ class TextRequest(BaseModel):
     source_name: str | None = None
 
 
-def create_app(run_root: str | Path = ".redaktsafe_runs", max_input_chars: int = 200_000) -> FastAPI:
+class LearningCorrectionRequest(BaseModel):
+    passphrase: str = Field(min_length=1)
+    text: str = Field(min_length=1)
+    span_text: str = Field(min_length=1)
+    entity_type: str = Field(min_length=1)
+    error_type: LearningErrorType
+    context_category: LearningContextCategory
+    downstream_exposure: str = "local"
+    detector_disagreement: bool = False
+    reviewer_id: str | None = None
+    note: str | None = None
+
+
+def create_app(
+    run_root: str | Path = ".redaktsafe_runs",
+    max_input_chars: int = 200_000,
+    learning_root: str | Path = ".redaktsafe_learning",
+) -> FastAPI:
     app = FastAPI(title="RedaktSafe Local API", version="0.1.0")
     root = Path(run_root)
+    learning_root_path = Path(learning_root)
     frontend_root = Path(__file__).resolve().parents[3] / "frontend"
 
     @app.get("/")
@@ -114,6 +133,28 @@ def create_app(run_root: str | Path = ".redaktsafe_runs", max_input_chars: int =
         if not resolved.is_file():
             raise HTTPException(status_code=404, detail="Unknown artifact")
         return FileResponse(resolved)
+
+    @app.post("/api/learning/corrections")
+    def add_learning_correction(request: LearningCorrectionRequest) -> dict[str, object]:
+        _enforce_size(request.text, max_input_chars)
+        ledger = LearningLedger(learning_root_path, passphrase=request.passphrase)
+        correction = ledger.append_correction(
+            text=request.text,
+            span_text=request.span_text,
+            entity_type=request.entity_type,
+            error_type=request.error_type,
+            context_category=request.context_category,
+            downstream_exposure=request.downstream_exposure,
+            detector_disagreement=request.detector_disagreement,
+            reviewer_id=request.reviewer_id,
+            note=request.note,
+        )
+        return correction.model_dump(mode="json")
+
+    @app.get("/api/learning/queue")
+    def learning_queue() -> list[dict[str, object]]:
+        ledger = LearningLedger(learning_root_path)
+        return [item.model_dump(mode="json") for item in ledger.review_queue()]
 
     return app
 

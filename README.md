@@ -25,6 +25,12 @@ python -m redaktsafe.cli packet fixtures/synthetic/simple_identifiers.txt --out 
 python -m redaktsafe.cli packet fixtures/synthetic/high_risk_mixed_identifiers.txt --out /tmp/redaktsafe-risk --strict
 python -m redaktsafe.cli eval --fixtures evals/cases.jsonl --out /tmp/redaktsafe-eval
 python -m redaktsafe.cli benchmark list
+python -m redaktsafe.cli benchmark compare \
+  --source nemotron_pii \
+  --input /path/to/nemotron_sample.jsonl \
+  --out /tmp/redaktsafe-compare-nemotron-openmed \
+  --hf-model-id OpenMed/OpenMed-PII-SuperClinical-Large-434M-v1 \
+  --hf-min-score 0.20
 python -m redaktsafe.cli serve --host 127.0.0.1 --port 8765
 ```
 
@@ -55,6 +61,8 @@ python -m redaktsafe.cli learning add-correction \
   --detector-disagreement
 
 python -m redaktsafe.cli learning queue --store .redaktsafe_learning
+
+python -m redaktsafe.cli learning corpus --store .redaktsafe_learning
 
 python -m redaktsafe.cli learning audit \
   --store .redaktsafe_learning \
@@ -96,6 +104,7 @@ http://127.0.0.1:8765/
 - Optional adapters are off by default and are not required for tests, CLI, API, UI, or evaluation.
 - Learning mode is off by default. When explicitly used, local snippets are encrypted at rest and correction ledgers store hashes and review metadata rather than plaintext snippets.
 - Learning audits are advisory. Candidate mitigations remain in shadow mode with `promote=false` unless canary, benchmark, provenance, and human-review gates allow promotion.
+- OpenMed-enabled benchmark comparison can improve recall, but model-backed promotion remains blocked when unsafe-pass or false-positive gates fail.
 
 ## Benchmarks
 
