@@ -5,7 +5,14 @@ import pytest
 
 from redaktsafe.cli import main
 from redaktsafe.contracts import LearningContextCategory, LearningErrorType, ReviewRoute
-from redaktsafe.learning import EncryptedSnippetStore, LearningLedger, score_correction
+from redaktsafe.learning import (
+    EncryptedSnippetStore,
+    LearningLedger,
+    context_canary_cases,
+    export_finetuning_dataset,
+    run_learning_audit,
+    score_correction,
+)
 
 
 def test_false_negative_direct_identifier_routes_to_review_redact():
@@ -184,3 +191,181 @@ def test_learning_store_is_gitignored():
     ignore_text = Path(".gitignore").read_text(encoding="utf-8")
 
     assert ".redaktsafe_learning/" in ignore_text
+
+
+def test_learning_audit_runs_once_when_activity_exists_then_skips_if_no_new_activity(tmp_path):
+    store = tmp_path / ".redaktsafe_learning"
+    ledger = LearningLedger(store, passphrase="local-secret")
+    high = ledger.append_correction(
+        text="Patient DeVries, DOB 1970-01-01, MRN E1234567.",
+        span_text="E1234567",
+        entity_type="MRN",
+        error_type=LearningErrorType.FALSE_NEGATIVE,
+        context_category=LearningContextCategory.PATIENT_CONTEXT,
+        downstream_exposure="external",
+        detector_disagreement=True,
+        reviewer_id="reviewer-a",
+    )
+    ledger.append_correction(
+        text="DeVries syndrome was discussed.",
+        span_text="DeVries",
+        entity_type="NAME",
+        error_type=LearningErrorType.FALSE_POSITIVE,
+        context_category=LearningContextCategory.MEDICAL_EPONYM,
+        downstream_exposure="local",
+        detector_disagreement=False,
+        reviewer_id="reviewer-a",
+    )
+
+    report = run_learning_audit(store=store, out_dir=tmp_path / "audit", if_due=True, interval_hours=24)
+
+    assert report.skipped is False
+    assert report.new_activity_count == 2
+    assert report.failure_summary["false_negative"] == 1
+    assert report.detector_disagreement_summary["with_disagreement"] == 1
+    assert report.candidate_mitigations
+    assert report.candidate_mitigations[0].source_correction_ids == [high.correction_id]
+    assert report.candidate_mitigations[0].shadow_mode is True
+    assert report.candidate_mitigations[0].promote is False
+    assert report.candidate_mitigations[0].rollback_ref.startswith("rollback_")
+    assert report.canary_results["case_count"] >= 5
+    assert report.canary_results["unsafe_pass_count"] == 0
+    assert report.benchmark_gate_results["promotion_allowed"] is False
+    assert (tmp_path / "audit" / "audit_report.json").exists()
+    assert (tmp_path / "audit" / "audit_report.md").exists()
+
+    skipped = run_learning_audit(store=store, out_dir=tmp_path / "audit-skip", if_due=True, interval_hours=24)
+
+    assert skipped.skipped is True
+    assert skipped.skip_reason == "no_new_activity"
+    assert skipped.new_activity_count == 0
+
+
+def test_context_canaries_cover_eponym_patient_institution_building_and_lab():
+    canaries = context_canary_cases()
+    texts = "\n".join(case["text"] for case in canaries)
+    categories = {case["context_category"] for case in canaries}
+
+    assert "DeVries syndrome" in texts
+    assert "Patient DeVries" in texts
+    assert "Johns Hopkins" in texts
+    assert "East Tower" in texts
+    assert "DeVries Lab" in texts
+    assert {
+        "medical_eponym",
+        "patient_context",
+        "institution",
+        "building_or_unit",
+        "research_lab",
+    }.issubset(categories)
+
+
+def test_finetuning_export_dry_run_requires_minimum_reviewed_corrections(tmp_path):
+    store = tmp_path / ".redaktsafe_learning"
+    ledger = LearningLedger(store, passphrase="local-secret")
+    ledger.append_correction(
+        text="Patient DeVries, MRN E1234567.",
+        span_text="E1234567",
+        entity_type="MRN",
+        error_type=LearningErrorType.FALSE_NEGATIVE,
+        context_category=LearningContextCategory.PATIENT_CONTEXT,
+        downstream_exposure="external",
+        detector_disagreement=True,
+    )
+
+    result = export_finetuning_dataset(
+        store=store,
+        out_dir=tmp_path / "finetune",
+        passphrase="local-secret",
+        min_examples=3,
+        dry_run=True,
+    )
+
+    assert result["ready"] is False
+    assert result["example_count"] == 1
+    assert result["minimum_required"] == 3
+    assert result["dry_run"] is True
+    assert "insufficient_reviewed_corrections" in result["reason"]
+    assert (tmp_path / "finetune" / "finetune_manifest.json").exists()
+
+
+def test_learning_cli_audit_and_finetune_export(tmp_path, capsys):
+    store = tmp_path / ".redaktsafe_learning"
+    status = main(
+        [
+            "learning",
+            "add-correction",
+            "--store",
+            str(store),
+            "--passphrase",
+            "local-secret",
+            "--text",
+            "Patient DeVries, MRN E1234567.",
+            "--span-text",
+            "E1234567",
+            "--entity-type",
+            "MRN",
+            "--error-type",
+            "false_negative",
+            "--context-category",
+            "patient_context",
+            "--downstream-exposure",
+            "external",
+            "--detector-disagreement",
+        ]
+    )
+    assert status == 0
+    capsys.readouterr()
+
+    audit_status = main(
+        [
+            "learning",
+            "audit",
+            "--store",
+            str(store),
+            "--out",
+            str(tmp_path / "audit"),
+            "--if-due",
+            "--interval-hours",
+            "24",
+        ]
+    )
+    audit_payload = json.loads(capsys.readouterr().out)
+
+    assert audit_status == 0
+    assert audit_payload["skipped"] is False
+    assert audit_payload["promotion_recommendation"]["promote"] is False
+
+    export_status = main(
+        [
+            "learning",
+            "export-finetune",
+            "--store",
+            str(store),
+            "--out",
+            str(tmp_path / "finetune"),
+            "--passphrase",
+            "local-secret",
+            "--min-examples",
+            "3",
+            "--dry-run",
+        ]
+    )
+    export_payload = json.loads(capsys.readouterr().out)
+
+    assert export_status == 0
+    assert export_payload["ready"] is False
+    assert export_payload["example_count"] == 1
+
+
+def test_learning_cli_canaries_writes_eval_artifact(tmp_path, capsys):
+    out = tmp_path / "canaries"
+
+    status = main(["learning", "canaries", "--out", str(out)])
+    payload = json.loads(capsys.readouterr().out)
+
+    assert status == 0
+    assert payload["case_count"] >= 5
+    assert payload["unsafe_pass_count"] == 0
+    assert payload["passed"] is True
+    assert (out / "learning_canary_results.json").exists()

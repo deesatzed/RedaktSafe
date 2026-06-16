@@ -219,3 +219,46 @@ Verification:
 - `python -m pytest tests/test_learning.py -q` -> 9 passed.
 - `python -m pytest -q` -> 47 passed.
 - `git diff --check` -> exited 0.
+
+## 2026-06-16 Learning Audit, Promotion Gates, and Fine-Tuning Export
+
+Implemented:
+
+- Added `redaktsafe learning audit --if-due --interval-hours 24`.
+- Added audit state tracking that skips when there is no learning activity or no new activity since the last audit.
+- Added audit artifacts: `audit_report.json` and `audit_report.md`.
+- Added context canaries covering:
+  - `DeVries syndrome` medical eponym context,
+  - `Patient DeVries` patient identifier context,
+  - `Johns Hopkins` institution context,
+  - `East Tower` building/unit context,
+  - `DeVries Lab` research lab context.
+- Added shadow-mode candidate mitigations with source correction IDs, context category, severity score, gate results, promotion decision, version, and rollback reference.
+- Added `redaktsafe learning canaries --out PATH`.
+- Added `redaktsafe learning export-finetune --dry-run`, with readiness blocked until the reviewed correction count reaches the configured minimum.
+
+Safety posture:
+
+- Candidate mitigations remain advisory and `promote=false` by default.
+- High-risk false negatives route to human review and are not auto-promoted.
+- Fine-tuning export does not run real training and reports `insufficient_reviewed_corrections` when data volume is below threshold.
+- Optional benchmark sample failures block promotion rather than being ignored.
+
+Verification:
+
+- `python -m pytest tests/test_learning.py -q` -> 14 passed.
+- `python -m pytest -q` -> 52 passed.
+- `python -m redaktsafe.cli schemas --out /tmp/redaktsafe-schemas-final` -> wrote 11 schemas.
+- `python -m redaktsafe.cli learning canaries --out /tmp/redaktsafe-learning-canaries-final` -> case count 5, unsafe-pass count 0, wrote JSON and Markdown artifacts.
+- Learning smoke with missed MRN and `DeVries syndrome` false-positive corrections -> first queue item was missed `MRN`, route `REVIEW_REDACT`, severity `100`.
+- `python -m redaktsafe.cli learning audit --store /tmp/redaktsafe-learning-goal-smoke --out /tmp/redaktsafe-learning-goal-audit-1 --if-due --interval-hours 24` -> ran with new activity count 2, candidate count 2, canaries passed, promotion allowed false.
+- Second audit with same store and `--if-due --interval-hours 24` -> skipped with `skip_reason=no_new_activity`.
+- `python -m redaktsafe.cli learning export-finetune --store /tmp/redaktsafe-learning-goal-smoke --out /tmp/redaktsafe-learning-goal-finetune --passphrase local-secret --min-examples 3 --dry-run` -> ready false, example count 2, reason `insufficient_reviewed_corrections`.
+- Plaintext scan of `/tmp/redaktsafe-learning-goal-smoke` for known snippets -> no hits.
+- `python -m redaktsafe.cli eval --fixtures evals/cases.jsonl --out /tmp/redaktsafe-eval-final` -> 10 cases, recall 1.0, precision 1.0, unsafe-pass count 0, no raw input violations 0.
+- Packet receipt inspection for simple and high-risk fixtures -> no checked raw identifier hits; high-risk strict packet returned code 3.
+- Local benchmark samples:
+  - Presidio synthetic sample -> recall 1.0, precision 1.0, unsafe-pass count 0.
+  - Nemotron sample -> recall 0.5833, precision 1.0, unsafe-pass count 1.
+  - AI4Privacy sample -> recall 0.0, precision 1.0, unsafe-pass count 4.
+- Safety phrase scan -> no forbidden claim violations.

@@ -58,6 +58,15 @@ The app has four layers:
 - Add interfaces or stubs for OpenMed, redaktorg, Agent Pidgin, Sentinel, and local model detectors only after baseline CLI, eval, API, and UI are working.
 - Verification: tests prove the app works when adapters are absent and deterministic findings cannot be downgraded.
 
+### Phase 7: Learning Audit, Gates, and Fine-Tuning Export
+
+- Add opt-in encrypted learning correction storage and review queue.
+- Add 24-hour-if-active audit behavior.
+- Add context canaries for eponyms, patient surname context, institutions, buildings/units, and research labs.
+- Add shadow-mode candidate mitigations with source correction IDs, severity score, gate results, promotion decision, version, and rollback reference.
+- Add fine-tuning export/dry-run path that refuses readiness when reviewed correction volume is below the configured minimum.
+- Verification: learning tests, canary command, audit command, fine-tuning dry-run, no-plaintext scans, and full test suite.
+
 ## First Implementation Batch
 
 The first batch should complete Phase 0 and as much of Phases 1 and 2 as practical without skipping tests:
@@ -66,4 +75,3 @@ The first batch should complete Phase 0 and as much of Phases 1 and 2 as practic
 2. Write tests for `doctor`, schema export, detector basics, receipt raw-input exclusion, and CLI artifact creation.
 3. Implement contracts, deterministic detectors, profile/dedup, span merge/redaction, packet pipeline, artifact writer, and strict mode.
 4. Run the nearest verification commands and update `PROGRESS.md`.
-

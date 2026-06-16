@@ -23,6 +23,8 @@ It must not claim HIPAA compliance, guaranteed deidentification, external-sharin
 - Generated local run artifacts belong in gitignored locations such as `.redaktsafe_runs/` or explicit `/tmp/redaktsafe-*` paths.
 - Deterministic detectors must remain mandatory and cannot be weakened or overridden by optional adapters.
 - Optional adapters can add findings or metadata, but they cannot downgrade deterministic findings or mark uncertain output safe.
+- Learning-mode changes must be opt-in, provenance-recorded, shadowed before promotion, and blocked from weakening deterministic structured-identifier findings.
+- High-risk learned false-negative corrections must route to human review before promotion.
 - Tests must not be weakened to make commands pass.
 
 ## Documentation Language
@@ -44,4 +46,3 @@ Avoid:
 - clinically validated
 - production ready
 - regulatory cleared
-

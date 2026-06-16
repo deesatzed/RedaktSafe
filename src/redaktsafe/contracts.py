@@ -225,6 +225,36 @@ class LearningQueueItem(StrictModel):
     created_at: str
 
 
+class LearningAuditCandidate(StrictModel):
+    candidate_id: str
+    version: str
+    source_correction_ids: list[str]
+    context_category: LearningContextCategory
+    severity_score: int = Field(ge=0, le=100)
+    mitigation_type: str
+    description: str
+    shadow_mode: bool = True
+    promote: bool = False
+    gate_results: dict[str, bool | int | float | str]
+    rollback_ref: str
+
+
+class LearningAuditReport(StrictModel):
+    audit_id: str
+    created_at: str
+    skipped: bool = False
+    skip_reason: str | None = None
+    interval_hours: int
+    correction_count: int
+    new_activity_count: int
+    failure_summary: dict[str, int]
+    detector_disagreement_summary: dict[str, int]
+    candidate_mitigations: list[LearningAuditCandidate]
+    canary_results: dict[str, int | float | bool | str]
+    benchmark_gate_results: dict[str, int | float | bool | str]
+    promotion_recommendation: dict[str, int | float | bool | str]
+
+
 def utc_now_iso() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
 
@@ -240,4 +270,6 @@ def schema_models() -> dict[str, type[BaseModel]]:
         "ValidationSummary": ValidationSummary,
         "LearningCorrection": LearningCorrection,
         "LearningQueueItem": LearningQueueItem,
+        "LearningAuditCandidate": LearningAuditCandidate,
+        "LearningAuditReport": LearningAuditReport,
     }

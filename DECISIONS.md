@@ -53,3 +53,15 @@ RedaktSafe now supports opt-in Hugging Face token-classification models through 
 Status: Accepted
 
 RedaktSafe learning mode is opt-in and separate from the default packet pipeline. It may retain encrypted local snippets for reviewed corrections until learning work is completed, but the correction ledger stores hashes and review metadata rather than plaintext snippets. Learning mode ranks classification-error severity and routes high-cost or ambiguous cases to human review. The first implementation does not auto-promote rules, change detector behavior, or fine-tune models.
+
+## 2026-06-16: Learning Promotion Requires Shadow Mode, Canaries, and Human Review Gates
+
+Status: Accepted
+
+Learning audits can create candidate mitigations from reviewed corrections, but candidates remain advisory and shadow-mode by default. Each candidate records source correction IDs, context category, severity score, gate results, a promotion decision, version, and rollback reference. Current promotion gates set `promote=false` unless canary/benchmark evidence and human review allow promotion. High-risk false negatives route to human review and are not auto-promoted.
+
+## 2026-06-16: Fine-Tuning Is Export-Gated, Not Automatic
+
+Status: Accepted
+
+RedaktSafe now provides a fine-tuning export/dry-run path for reviewed corrections. It reports readiness only when the reviewed correction count meets the configured minimum. It does not train on unreviewed model guesses, and dry-run output is used when correction volume is insufficient.

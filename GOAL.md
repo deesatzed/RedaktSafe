@@ -11,7 +11,7 @@ Current verified baseline:
 - Python package and CLI named `redaktsafe` implemented.
 - Deterministic local redaction, opt-in Hugging Face/OpenMed model detection, opt-in encrypted local learning correction capture, packet generation, schema export, evaluation harness, external benchmark adapters, FastAPI service, static local UI, adapter stubs, fake model hook, and benchmark payload helper implemented.
 - Default operation remains local-first, deterministic, credential-free, network-free, and model-download-free.
-- Learning mode is opt-in and currently supports encrypted local snippet retention, correction ledger, severity scoring, and review queue.
+- Learning mode is opt-in and currently supports encrypted local snippet retention, correction ledger, severity scoring, review queue, 24-hour-if-active audit behavior, context canaries, shadow-mode candidate mitigations, promotion gates, and fine-tuning export/dry-run.
 - `.redaktsafe_runs/`, `.redaktsafe_learning/`, and `.env` are gitignored.
 - Latest pushed commits include:
   - `f908dd7 Add local learning correction loop`
@@ -20,16 +20,18 @@ Current verified baseline:
 
 Latest verified commands before this remaining-work goal:
 
-- `python -m pytest tests/test_learning.py -q` -> 9 passed.
-- `python -m pytest -q` -> 47 passed.
-- `python -m redaktsafe.cli schemas --out /tmp/redaktsafe-schemas-learning` -> wrote 9 schemas.
+- `python -m pytest tests/test_learning.py -q` -> 14 passed.
+- `python -m pytest -q` -> 52 passed.
+- `python -m redaktsafe.cli schemas --out /tmp/redaktsafe-schemas-final` -> wrote 11 schemas.
 - Learning CLI smoke routed a missed MRN correction to `REVIEW_REDACT` with severity `100`.
-- Plaintext scan of `/tmp/redaktsafe-learning-smoke` found no raw snippet hits.
+- Learning audit smoke ran with new activity count 2, candidate count 2, canaries passed, promotion allowed false, then skipped the second run with `skip_reason=no_new_activity`.
+- Fine-tuning dry-run reported `ready=false` because reviewed correction count was below the configured minimum.
+- Plaintext scan of `/tmp/redaktsafe-learning-goal-smoke` found no raw snippet hits.
 - `git diff --check` exited 0.
 - Safety phrase scan found no forbidden compliance or safety overclaims.
 
 OUTCOME:
-Complete the remaining RedaktSafe learning-loop build so that the app can locally capture reviewed corrections, rank error severity, retain encrypted snippets, run a 24-hour-if-active audit, propose context-aware mitigations, gate learned changes against benchmarks/canaries, prepare a fine-tuning dataset path when enough reviewed data exists, document the final state, commit the work, and push to `https://github.com/deesatzed/RedaktSafe.git`.
+Maintain and verify the completed RedaktSafe learning-loop build so that the app can locally capture reviewed corrections, rank error severity, retain encrypted snippets, run a 24-hour-if-active audit, propose context-aware mitigations, gate learned changes against benchmarks/canaries, prepare a fine-tuning dataset path when enough reviewed data exists, document the final state, commit the work, and push to `https://github.com/deesatzed/RedaktSafe.git`.
 
 PROOF OF DONE:
 1. Run `python -m pytest -q` and confirm it exits 0.

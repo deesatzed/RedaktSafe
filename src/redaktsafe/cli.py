@@ -10,7 +10,7 @@ from redaktsafe.artifacts import write_artifacts
 from redaktsafe.benchmarks import list_benchmarks, run_benchmark
 from redaktsafe.contracts import LearningContextCategory, LearningErrorType, PipelineConfig, schema_models
 from redaktsafe.eval import run_eval
-from redaktsafe.learning import LearningLedger
+from redaktsafe.learning import LearningLedger, export_finetuning_dataset, run_context_canary_eval, run_learning_audit
 from redaktsafe.pipeline import run_packet_pipeline, strict_should_fail
 
 
@@ -86,6 +86,22 @@ def _build_parser() -> argparse.ArgumentParser:
     learning_queue = learning_subparsers.add_parser("queue", help="List learning corrections ordered by review priority.")
     learning_queue.add_argument("--store", required=True, type=Path)
     learning_queue.set_defaults(handler=_learning_queue)
+    learning_audit = learning_subparsers.add_parser("audit", help="Run local learning audit when activity exists.")
+    learning_audit.add_argument("--store", required=True, type=Path)
+    learning_audit.add_argument("--out", required=True, type=Path)
+    learning_audit.add_argument("--if-due", action="store_true")
+    learning_audit.add_argument("--interval-hours", type=int, default=24)
+    learning_audit.set_defaults(handler=_learning_audit)
+    learning_export = learning_subparsers.add_parser("export-finetune", help="Export reviewed corrections for fine-tuning or dry-run readiness.")
+    learning_export.add_argument("--store", required=True, type=Path)
+    learning_export.add_argument("--out", required=True, type=Path)
+    learning_export.add_argument("--passphrase", required=True)
+    learning_export.add_argument("--min-examples", type=int, default=100)
+    learning_export.add_argument("--dry-run", action="store_true")
+    learning_export.set_defaults(handler=_learning_export_finetune)
+    learning_canaries = learning_subparsers.add_parser("canaries", help="Run context ambiguity learning canaries.")
+    learning_canaries.add_argument("--out", required=True, type=Path)
+    learning_canaries.set_defaults(handler=_learning_canaries)
 
     serve_parser = subparsers.add_parser("serve", help="Run the local API and browser UI.")
     serve_parser.add_argument("--host", default="127.0.0.1")
@@ -194,6 +210,35 @@ def _learning_add_correction(args: argparse.Namespace) -> int:
 def _learning_queue(args: argparse.Namespace) -> int:
     ledger = LearningLedger(args.store)
     print(json.dumps([item.model_dump(mode="json") for item in ledger.review_queue()], indent=2, sort_keys=True))
+    return 0
+
+
+def _learning_audit(args: argparse.Namespace) -> int:
+    report = run_learning_audit(
+        store=args.store,
+        out_dir=args.out,
+        if_due=args.if_due,
+        interval_hours=args.interval_hours,
+    )
+    print(json.dumps(report.model_dump(mode="json"), indent=2, sort_keys=True))
+    return 0
+
+
+def _learning_export_finetune(args: argparse.Namespace) -> int:
+    result = export_finetuning_dataset(
+        store=args.store,
+        out_dir=args.out,
+        passphrase=args.passphrase,
+        min_examples=args.min_examples,
+        dry_run=args.dry_run,
+    )
+    print(json.dumps(result, indent=2, sort_keys=True))
+    return 0
+
+
+def _learning_canaries(args: argparse.Namespace) -> int:
+    result = run_context_canary_eval(args.out)
+    print(json.dumps(result, indent=2, sort_keys=True))
     return 0
 
 

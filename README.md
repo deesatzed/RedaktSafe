@@ -8,7 +8,7 @@ RedaktSafe is deidentification-assistive software. It does not replace human rev
 
 The local MVP is implemented from `redaktsafe_codex_handoff/`. It includes the deterministic CLI and packet pipeline, schema-backed artifacts, synthetic eval harness, optional benchmark adapters, local FastAPI service, static local UI, and an opt-in Hugging Face token-classification adapter. The default path remains offline and deterministic; model detection is optional and additive.
 
-Opt-in learning mode now supports encrypted local snippet retention, reviewed correction capture, error-severity scoring, and human-review queue routing. It does not auto-promote rules, alter detector behavior, or fine-tune models.
+Opt-in learning mode now supports encrypted local snippet retention, reviewed correction capture, error-severity scoring, human-review queue routing, 24-hour-if-active audits, context canaries, shadow-mode mitigation candidates, promotion gates, and a fine-tuning export/dry-run path. It does not auto-promote high-risk changes or fine-tune models without enough reviewed corrections.
 
 ## Install
 
@@ -55,6 +55,22 @@ python -m redaktsafe.cli learning add-correction \
   --detector-disagreement
 
 python -m redaktsafe.cli learning queue --store .redaktsafe_learning
+
+python -m redaktsafe.cli learning audit \
+  --store .redaktsafe_learning \
+  --out /tmp/redaktsafe-learning-audit \
+  --if-due \
+  --interval-hours 24
+
+python -m redaktsafe.cli learning canaries \
+  --out /tmp/redaktsafe-learning-canaries
+
+python -m redaktsafe.cli learning export-finetune \
+  --store .redaktsafe_learning \
+  --out /tmp/redaktsafe-finetune-export \
+  --passphrase "local-passphrase" \
+  --min-examples 100 \
+  --dry-run
 ```
 
 After editable install, the console command is also available:
@@ -79,6 +95,7 @@ http://127.0.0.1:8765/
 - Synthetic fixtures are for testing only and are not real patient data.
 - Optional adapters are off by default and are not required for tests, CLI, API, UI, or evaluation.
 - Learning mode is off by default. When explicitly used, local snippets are encrypted at rest and correction ledgers store hashes and review metadata rather than plaintext snippets.
+- Learning audits are advisory. Candidate mitigations remain in shadow mode with `promote=false` unless canary, benchmark, provenance, and human-review gates allow promotion.
 
 ## Benchmarks
 
