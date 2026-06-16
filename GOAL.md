@@ -30,8 +30,17 @@ Latest verified commands before this remaining-work goal:
 - `git diff --check` exited 0.
 - Safety phrase scan found no forbidden compliance or safety overclaims.
 
+NEXT ROADMAP:
+
+1. Improve benchmark recall on available PII benchmark samples while preserving deterministic findings, receipt safety, and unsafe-pass gates.
+2. Run OpenMed-enabled benchmark gates for Nemotron and AI4Privacy using `OpenMed/OpenMed-PII-SuperClinical-Large-434M-v1` with a documented threshold such as `--hf-min-score 0.20`, then compare against deterministic-only results.
+3. Add a local reviewer UI for learning corrections so false positives, false negatives, wrong entity types, contextual allows, and contextual redactions can be captured without CLI-only workflows.
+4. Build a reviewed correction corpus across missed direct identifiers, eponyms, institutions, buildings/units, research labs, provider-name ambiguity, and patient surname ambiguity.
+5. Add an optional teacher-model audit adapter for nightly local review. The adapter must remain optional, use fake/injected adapters in default tests, and must not auto-promote learned behavior.
+6. Expand the entity taxonomy and detector normalization for IDs, usernames, institutions, labs, departments, buildings/units, provider names, and ambiguous eponyms without weakening existing deterministic structured-identifier detection.
+
 OUTCOME:
-Maintain and verify the completed RedaktSafe learning-loop build so that the app can locally capture reviewed corrections, rank error severity, retain encrypted snippets, run a 24-hour-if-active audit, propose context-aware mitigations, gate learned changes against benchmarks/canaries, prepare a fine-tuning dataset path when enough reviewed data exists, document the final state, commit the work, and push to `https://github.com/deesatzed/RedaktSafe.git`.
+Maintain and verify the completed RedaktSafe learning-loop build, then pursue the next roadmap so that RedaktSafe improves benchmark recall, supports OpenMed-enabled benchmark gates, captures reviewer corrections through a local UI, accumulates a reviewed correction corpus, supports optional teacher-model audit, expands entity taxonomy, documents the final state, commits the work, and pushes to `https://github.com/deesatzed/RedaktSafe.git`.
 
 PROOF OF DONE:
 1. Run `python -m pytest -q` and confirm it exits 0.
