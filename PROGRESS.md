@@ -155,3 +155,27 @@ Verification so far:
 - Standard CLI/eval proof rerun -> doctor ok, console doctor ok, 7 schemas exported, simple packet `NEEDS_MANUAL_REVIEW`, high-risk strict packet `NOT_LLM_SAFE` with strict return code `3`, eval recall 1.0, precision 1.0, unsafe-pass count 0.
 - Receipt raw-hit inspection for simple and high-risk runs -> no checked raw identifier hits.
 - Contextual safety phrase check -> no forbidden claim violations.
+
+## 2026-06-16 Real Hugging Face Model Detector
+
+Implemented:
+
+- Added `hf_token_classifier` adapter using local Hugging Face token-classification models.
+- Added optional `models` dependency extra for real model detection.
+- Added CLI support for `--hf-model-id` and `--hf-min-score` on packet/text and benchmark commands.
+- Added `.env` support for `HF_TOKEN`, `HUGGING_FACE_HUB_TOKEN`, and `HF_READ`.
+- Added model adapter tests with an injected fake pipeline so default tests remain offline.
+- Added adapter caching so benchmark runs load a model once per process instead of once per case.
+
+Environment findings:
+
+- `.env` contains `HF_READ`; token validation identified the Hugging Face account as `o2satz`.
+- Active Python environment had `transformers`, `torch`, and `huggingface_hub`.
+- `kernels 0.15.1` caused a `ValueError: Either a revision or a version must be specified` during transformer model imports. Downgrading to `kernels 0.14.1` fixed the issue.
+
+Verification:
+
+- `python -m pytest` -> 38 passed.
+- `python -m redaktsafe.cli text 'Consult completed for Avery Stone. Email jane@example.com. Phone 617-555-0142.' --out /tmp/redaktsafe-hf-openmed-env-smoke2 --hf-model-id OpenMed/OpenMed-PII-SuperClinical-Large-434M-v1 --hf-min-score 0.20` -> wrote 6 artifacts and detected `NAME`, `EMAIL`, and `PHONE`.
+- `python -m redaktsafe.cli benchmark run --source nemotron_pii --input /tmp/redaktsafe-nemotron-sample.jsonl --out /tmp/redaktsafe-benchmark-nemotron-openmed-cached --hf-model-id OpenMed/OpenMed-PII-SuperClinical-Large-434M-v1 --hf-min-score 0.20` -> case count 5, recall 0.9167, precision 1.0, false positives 0, unsafe-pass count 1, no raw input violations 0, p50 latency about 163 ms after adapter caching.
+- `python -m redaktsafe.cli benchmark run --source ai4privacy_300k --input /tmp/redaktsafe-ai4privacy-sample.jsonl --out /tmp/redaktsafe-benchmark-ai4privacy-openmed --hf-model-id OpenMed/OpenMed-PII-SuperClinical-Large-434M-v1 --hf-min-score 0.20` -> case count 5, recall 0.2, precision 0.3333, false positives 2, unsafe-pass count 1, no raw input violations 0.

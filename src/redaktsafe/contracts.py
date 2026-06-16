@@ -34,6 +34,7 @@ class PipelineConfig(StrictModel):
     fail_closed_on_uncertainty: bool = True
     deterministic_detectors_enabled: bool = True
     adapters_enabled: list[str] = Field(default_factory=list)
+    model_adapters: dict[str, dict[str, str | float | int | bool]] = Field(default_factory=dict)
 
 
 class InputProfile(StrictModel):
@@ -173,4 +174,3 @@ def schema_models() -> dict[str, type[BaseModel]]:
         "SafePacket": SafePacket,
         "ValidationSummary": ValidationSummary,
     }
-

@@ -5,8 +5,10 @@ import statistics
 import time
 from pathlib import Path
 from typing import Any
+from collections.abc import Callable
 
 from redaktsafe.artifacts import write_artifacts
+from redaktsafe.contracts import PipelineConfig
 from redaktsafe.pipeline import REQUIRED_ARTIFACTS, run_packet_pipeline
 
 RISK_RANK = {
@@ -18,7 +20,12 @@ RISK_RANK = {
 }
 
 
-def run_eval(fixtures: str | Path, out: str | Path) -> dict[str, Any]:
+def run_eval(
+    fixtures: str | Path,
+    out: str | Path,
+    config: PipelineConfig | None = None,
+    adapter_factories: dict[str, Callable[[dict], object]] | None = None,
+) -> dict[str, Any]:
     fixtures_path = Path(fixtures)
     out_dir = Path(out)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -39,7 +46,7 @@ def run_eval(fixtures: str | Path, out: str | Path) -> dict[str, Any]:
         text_path = Path(case["file"])
         raw_text = text_path.read_text(encoding="utf-8")
         started = time.perf_counter()
-        result = run_packet_pipeline(raw_text, source_name=str(text_path))
+        result = run_packet_pipeline(raw_text, config=config, source_name=str(text_path), adapter_factories=adapter_factories)
         elapsed_ms = (time.perf_counter() - started) * 1000
         latencies_ms.append(elapsed_ms)
 
@@ -181,4 +188,3 @@ def _report(results: dict[str, Any]) -> str:
             f"unsafe_pass={case['unsafe_pass']}"
         )
     return "\n".join(lines) + "\n"
-

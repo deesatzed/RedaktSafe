@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from collections import Counter
+from collections.abc import Callable
 from uuid import uuid4
 
+from redaktsafe.adapters import ADAPTER_FACTORIES, cached_adapter_factory
 from redaktsafe.contracts import (
     ArtifactRef,
     DetectorMetadata,
@@ -16,6 +18,7 @@ from redaktsafe.contracts import (
     Severity,
     ValidationSummary,
     utc_now_iso,
+    DetectedSpan,
 )
 from redaktsafe.adapters import load_optional_adapters
 from redaktsafe.detectors import regex_detectors
@@ -42,6 +45,7 @@ def run_packet_pipeline(
     raw_text: str,
     config: PipelineConfig | None = None,
     source_name: str | None = None,
+    adapter_factories: dict[str, Callable[[dict], object]] | None = None,
 ) -> PacketRunResult:
     config = config or PipelineConfig()
     if len(raw_text) > config.max_input_chars:
@@ -50,6 +54,9 @@ def run_packet_pipeline(
     try:
         deduped_text, dedup_summary = deduplicate_exact_lines(raw_text)
         detected = regex_detectors.detect(deduped_text) if config.deterministic_detectors_enabled else []
+        optional_adapters = _load_configured_adapters(config, adapter_factories=adapter_factories)
+        adapter_metadata = [adapter.metadata() for adapter in optional_adapters]
+        detected.extend(_adapter_findings_to_spans(deduped_text, optional_adapters))
         spans = merge_spans(detected)
         redacted_text = apply_redactions(deduped_text, spans)
         counts = dict(sorted(Counter(span.entity_type for span in spans).items()))
@@ -68,9 +75,6 @@ def run_packet_pipeline(
             [span.severity for span in spans],
             source_name,
         )
-
-        optional_adapters = load_optional_adapters(config.adapters_enabled)
-        adapter_metadata = [adapter.metadata() for adapter in optional_adapters]
 
         report = RedactionReport(
             detected_spans=spans,
@@ -271,3 +275,46 @@ def _fail_closed(raw_text: str, config: PipelineConfig, source_name: str | None,
         validation_summary=validation,
         input_profile=profile,
     )
+
+
+def _load_configured_adapters(config: PipelineConfig, adapter_factories: dict[str, Callable[[dict], object]] | None = None):
+    factories = dict(ADAPTER_FACTORIES)
+    if adapter_factories:
+        factories.update(adapter_factories)
+    adapters = []
+    unknown_ids = []
+    for adapter_id in config.adapters_enabled:
+        settings = config.model_adapters.get(adapter_id, {})
+        factory = factories.get(adapter_id)
+        if factory:
+            if adapter_factories and adapter_id in adapter_factories:
+                adapters.append(factory(settings))
+            else:
+                adapters.append(cached_adapter_factory(adapter_id, settings))
+        else:
+            unknown_ids.append(adapter_id)
+    if unknown_ids:
+        adapters.extend(load_optional_adapters(unknown_ids))
+    return adapters
+
+
+def _adapter_findings_to_spans(text: str, adapters) -> list[DetectedSpan]:
+    spans: list[DetectedSpan] = []
+    for adapter in adapters:
+        if not getattr(adapter, "available", False):
+            continue
+        for finding in adapter.detect(text):
+            spans.append(
+                DetectedSpan(
+                    span_id=f"span_model_{sha256_text(f'{finding.adapter_id}:{finding.start}:{finding.end}:{finding.entity_type}')[:12]}",
+                    start=finding.start,
+                    end=finding.end,
+                    entity_type=finding.entity_type,
+                    replacement=f"[REDACTED_{finding.entity_type}]",
+                    detectors=[finding.adapter_id],
+                    confidence=finding.confidence,
+                    severity=Severity(finding.severity),
+                    text_hash=finding.text_hash or sha256_text(text[finding.start:finding.end]),
+                )
+            )
+    return spans

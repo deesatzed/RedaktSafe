@@ -3,10 +3,12 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import ast
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
+from redaktsafe.contracts import PipelineConfig
 from redaktsafe.eval import run_eval
 
 
@@ -86,6 +88,7 @@ ENTITY_MAP = {
     "date": "DATE",
     "date_of_birth": "DATE",
     "dob": "DATE",
+    "bod": "DATE",
     "email": "EMAIL",
     "first_name": "NAME",
     "givenname": "NAME",
@@ -94,6 +97,13 @@ ENTITY_MAP = {
     "location": "ADDRESS",
     "medical_record_number": "MRN",
     "mrn": "MRN",
+    "idcard": "ID",
+    "id_card": "ID",
+    "identity_card": "ID",
+    "identity_card_number": "ID",
+    "passport_number": "ID",
+    "national_id": "ID",
+    "national_id_number": "ID",
     "name": "NAME",
     "name_student": "NAME",
     "patient": "NAME",
@@ -106,9 +116,10 @@ ENTITY_MAP = {
     "street_address": "ADDRESS",
     "url": "URL",
     "url_personal": "URL",
+    "username": "USERNAME",
 }
 
-INCLUDED_ENTITIES = {"ADDRESS", "DATE", "EMAIL", "MRN", "NAME", "NPI", "PHONE", "SSN", "URL"}
+INCLUDED_ENTITIES = {"ADDRESS", "DATE", "EMAIL", "ID", "MRN", "NAME", "NPI", "PHONE", "SSN", "URL", "USERNAME"}
 
 
 def list_benchmarks() -> list[dict[str, str]]:
@@ -160,12 +171,13 @@ def run_benchmark(
     input_path: str | Path,
     out_dir: str | Path,
     limit: int | None = None,
+    config: PipelineConfig | None = None,
 ) -> dict[str, Any]:
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     spec = _spec(benchmark_id)
     manifest = convert_benchmark_to_eval(benchmark_id, input_path, out / "converted", limit=limit)
-    results = run_eval(manifest, out / "eval")
+    results = run_eval(manifest, out / "eval", config=config)
     payload = {
         "benchmark_id": benchmark_id,
         "benchmark": asdict(spec),
@@ -247,12 +259,14 @@ def _extract_spans(row: dict[str, Any]) -> list[Any]:
             return value
     span_labels = row.get("span_labels")
     if isinstance(span_labels, str):
-        try:
-            parsed = json.loads(span_labels)
-            if isinstance(parsed, list):
-                return parsed
-        except json.JSONDecodeError:
-            return []
+        parsed = _parse_span_string(span_labels)
+        if isinstance(parsed, list):
+            return parsed
+    spans = row.get("spans")
+    if isinstance(spans, str):
+        parsed = _parse_span_string(spans)
+        if isinstance(parsed, list):
+            return parsed
     return []
 
 
@@ -277,6 +291,16 @@ def _normalize_entity(label: str) -> str | None:
     return upper if upper in INCLUDED_ENTITIES else None
 
 
+def _parse_span_string(value: str) -> Any:
+    try:
+        return json.loads(value)
+    except json.JSONDecodeError:
+        try:
+            return ast.literal_eval(value)
+        except (ValueError, SyntaxError):
+            return None
+
+
 def _safe_case_id(case_id: str) -> str:
     safe = re.sub(r"[^A-Za-z0-9_.-]+", "_", case_id).strip("._")
     return safe or "case"
@@ -298,4 +322,3 @@ def _load_simple_n2c2_xml(path: Path, benchmark_id: str) -> list[BenchmarkRecord
             source_metadata={"format": "n2c2_xml", "benchmark_id": benchmark_id},
         )
     ]
-

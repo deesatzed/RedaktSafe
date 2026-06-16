@@ -37,12 +37,16 @@ def _build_parser() -> argparse.ArgumentParser:
     packet.add_argument("input", type=Path)
     packet.add_argument("--out", required=True, type=Path)
     packet.add_argument("--strict", action="store_true")
+    packet.add_argument("--hf-model-id")
+    packet.add_argument("--hf-min-score", type=float, default=0.30)
     packet.set_defaults(handler=_packet)
 
     text = subparsers.add_parser("text", help="Create a trust packet from command-line text.")
     text.add_argument("text")
     text.add_argument("--out", required=True, type=Path)
     text.add_argument("--strict", action="store_true")
+    text.add_argument("--hf-model-id")
+    text.add_argument("--hf-min-score", type=float, default=0.30)
     text.set_defaults(handler=_text)
 
     eval_parser = subparsers.add_parser("eval", help="Run synthetic evaluation fixtures.")
@@ -59,6 +63,8 @@ def _build_parser() -> argparse.ArgumentParser:
     benchmark_run.add_argument("--input", required=True, type=Path)
     benchmark_run.add_argument("--out", required=True, type=Path)
     benchmark_run.add_argument("--limit", type=int)
+    benchmark_run.add_argument("--hf-model-id")
+    benchmark_run.add_argument("--hf-min-score", type=float, default=0.30)
     benchmark_run.set_defaults(handler=_benchmark_run)
 
     serve_parser = subparsers.add_parser("serve", help="Run the local API and browser UI.")
@@ -92,7 +98,7 @@ def _schemas(args: argparse.Namespace) -> int:
 
 def _packet(args: argparse.Namespace) -> int:
     raw_text = args.input.read_text(encoding="utf-8")
-    result = run_packet_pipeline(raw_text, PipelineConfig(), source_name=str(args.input))
+    result = run_packet_pipeline(raw_text, _config_from_args(args), source_name=str(args.input))
     result = write_artifacts(result, args.out)
     print(json.dumps(_summary(result), indent=2, sort_keys=True))
     if args.strict and strict_should_fail(result.safe_packet.residual_risk.lane):
@@ -101,7 +107,7 @@ def _packet(args: argparse.Namespace) -> int:
 
 
 def _text(args: argparse.Namespace) -> int:
-    result = run_packet_pipeline(args.text, PipelineConfig(), source_name="cli-text")
+    result = run_packet_pipeline(args.text, _config_from_args(args), source_name="cli-text")
     result = write_artifacts(result, args.out)
     print(json.dumps(_summary(result), indent=2, sort_keys=True))
     if args.strict and strict_should_fail(result.safe_packet.residual_risk.lane):
@@ -131,7 +137,7 @@ def _benchmark_list(_args: argparse.Namespace) -> int:
 
 
 def _benchmark_run(args: argparse.Namespace) -> int:
-    results = run_benchmark(args.source, args.input, args.out, limit=args.limit)
+    results = run_benchmark(args.source, args.input, args.out, limit=args.limit, config=_config_from_args(args))
     summary_keys = [
         "benchmark_id",
         "case_count",
@@ -163,6 +169,20 @@ def _summary(result) -> dict[str, object]:
         "review_required": result.safe_packet.residual_risk.review_required,
         "receipt_id": result.receipt.receipt_id,
     }
+
+
+def _config_from_args(args: argparse.Namespace) -> PipelineConfig:
+    if getattr(args, "hf_model_id", None):
+        return PipelineConfig(
+            adapters_enabled=["hf_token_classifier"],
+            model_adapters={
+                "hf_token_classifier": {
+                    "model_id": args.hf_model_id,
+                    "min_score": args.hf_min_score,
+                }
+            },
+        )
+    return PipelineConfig()
 
 
 if __name__ == "__main__":

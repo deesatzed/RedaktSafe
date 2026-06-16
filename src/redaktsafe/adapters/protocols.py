@@ -12,6 +12,7 @@ class AdapterFinding:
     end: int
     confidence: float
     severity: str
+    text_hash: str | None = None
 
 
 class OptionalAdapter(Protocol):
@@ -40,4 +41,3 @@ class UnavailableAdapter:
 
     def detect(self, text: str) -> list[AdapterFinding]:
         return []
-

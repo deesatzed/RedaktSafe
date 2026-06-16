@@ -41,3 +41,9 @@ OpenMed, redaktorg, Agent Pidgin, Sentinel, and MLX/local model integrations are
 Status: Accepted
 
 RedaktSafe will support standard PII benchmark adapters for local exports from NVIDIA Nemotron-PII, AI4Privacy PII Masking 300k, Kaggle/PIILO PII Data Detection, Presidio-generated samples, and n2c2/i2b2 2014 de-identification data. The app will not automatically download these datasets or require benchmark credentials in default tests. Benchmark commands normalize user-provided local exports into the existing eval harness.
+
+## 2026-06-16: Real Model Detection Is Opt-In and Additive
+
+Status: Accepted
+
+RedaktSafe now supports opt-in Hugging Face token-classification models through `hf_token_classifier`. Model findings are additive: they can add detected spans but cannot remove, override, or downgrade deterministic findings. Tokens may be supplied through `HF_TOKEN`, `HUGGING_FACE_HUB_TOKEN`, or `HF_READ` in the environment or local `.env`; `.env` remains ignored.

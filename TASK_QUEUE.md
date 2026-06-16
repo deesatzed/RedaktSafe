@@ -17,6 +17,7 @@ Source: `redaktsafe_codex_handoff/tasks/codex_task_queue.yml`.
 - P6-001: Add optional adapter interfaces.
 - P7-001: Add fake model adapter tests and benchmark hooks.
 - P8-001: Add optional external PII benchmark adapters.
+- P9-001: Add opt-in real Hugging Face token-classification model detector.
 
 ## Active
 

@@ -30,6 +30,21 @@ python -m redaktsafe.cli benchmark run \
   --limit 1000
 ```
 
+Run a benchmark with a real Hugging Face token-classification model:
+
+```bash
+python -m pip install -e ".[models]"
+
+python -m redaktsafe.cli benchmark run \
+  --source ai4privacy_300k \
+  --input /path/to/ai4privacy_sample.jsonl \
+  --out /tmp/redaktsafe-benchmark-ai4privacy-openmed \
+  --hf-model-id OpenMed/OpenMed-PII-SuperClinical-Large-434M-v1 \
+  --hf-min-score 0.20
+```
+
+The Hugging Face token can be provided as `HF_TOKEN`, `HUGGING_FACE_HUB_TOKEN`, or `HF_READ`. RedaktSafe also reads those keys from a local `.env` file. Do not commit `.env`.
+
 Outputs:
 
 - `benchmark_results.json`
@@ -80,4 +95,3 @@ Presidio/generic JSONL:
 - Current metrics are entity-family-level metrics reused from the RedaktSafe eval runner, not strict character-offset span F1.
 - Some benchmark datasets include entity classes outside the current deterministic baseline. Unsupported classes are ignored until RedaktSafe has detectors for them.
 - n2c2/i2b2 official data access and format conversion remain user-managed.
-

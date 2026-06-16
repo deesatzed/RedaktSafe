@@ -10,13 +10,13 @@ Current verified state:
 - Git repository initialized after documenting that the folder began as a handoff workspace.
 - `redaktsafe_codex_handoff/` remains preserved as source documentation.
 - Python package and CLI named `redaktsafe` implemented.
-- Deterministic local redaction, packet generation, schema export, evaluation harness, external benchmark adapters, FastAPI service, static local UI, adapter stubs, fake model hook, and benchmark payload helper implemented.
+- Deterministic local redaction, opt-in real Hugging Face model detection, packet generation, schema export, evaluation harness, external benchmark adapters, FastAPI service, static local UI, adapter stubs, fake model hook, and benchmark payload helper implemented.
 - Generated local run artifacts are gitignored through `.redaktsafe_runs/`.
 - Default operation requires no API keys, credentials, model downloads, GPU, cloud service, or external network calls.
 
 Latest verification evidence:
 
-- `python -m pytest` -> 35 passed.
+- `python -m pytest` -> 38 passed.
 - `python -m redaktsafe.cli doctor` -> status ok.
 - `redaktsafe doctor` -> status ok.
 - `python -m redaktsafe.cli schemas --out /tmp/redaktsafe-schemas` -> wrote 7 schemas.
@@ -26,6 +26,7 @@ Latest verification evidence:
 - `python -m redaktsafe.cli eval --fixtures evals/cases.jsonl --out /tmp/redaktsafe-eval` -> 10 cases, recall 1.0, precision 1.0, false positives 0, unsafe-pass count 0, artifact completeness 1.0, receipt completeness 1.0, no raw input violations 0.
 - `python -m redaktsafe.cli benchmark list` -> listed optional adapters for NVIDIA Nemotron-PII, AI4Privacy PII Masking 300k, Kaggle/PIILO PII Data Detection, Presidio-style synthetic exports, and n2c2/i2b2 2014 de-identification exports.
 - `python -m redaktsafe.cli benchmark run --source presidio_synthetic --input /tmp/redaktsafe-presidio-bench-sample.jsonl --out /tmp/redaktsafe-benchmark-presidio` -> local sample benchmark ran with recall 1.0, precision 1.0, false positives 0, unsafe-pass count 0, artifact completeness 1.0, receipt completeness 1.0, no raw input violations 0.
+- `python -m redaktsafe.cli text 'Consult completed for Avery Stone. Email jane@example.com. Phone 617-555-0142.' --out /tmp/redaktsafe-hf-openmed-env-smoke2 --hf-model-id OpenMed/OpenMed-PII-SuperClinical-Large-434M-v1 --hf-min-score 0.20` -> real Hugging Face/OpenMed model path wrote all required artifacts and detected `NAME`, `EMAIL`, and `PHONE`.
 - API/UI served locally at `http://127.0.0.1:8765/`; `/health` returned healthy status.
 - Desktop and mobile UI smoke tests passed using local Chrome Beta through Playwright.
 - Safety phrase check found no forbidden compliance or safety overclaims in README, docs, frontend, or generated default artifacts.
@@ -34,7 +35,7 @@ Latest verification evidence:
 
 Residual/deferred work:
 
-- Real OpenMed, redaktorg, Agent Pidgin, Sentinel, and MLX integrations remain optional deferred work represented by stubs.
+- Real OpenMed Hugging Face token-classification detection is implemented as opt-in. redaktorg, Agent Pidgin, Sentinel, and MLX integrations remain optional deferred work represented by stubs.
 - Full external benchmark dataset downloads are user-managed and not part of default tests.
 - The UI is a local static workbench, not a production deployment.
 - The detector baseline is deterministic and synthetic-fixture-oriented; users must validate against their own data and policies before operational use.

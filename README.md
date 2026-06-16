@@ -26,6 +26,18 @@ python -m redaktsafe.cli benchmark list
 python -m redaktsafe.cli serve --host 127.0.0.1 --port 8765
 ```
 
+Optional Hugging Face model detection is available for packet and benchmark commands:
+
+```bash
+python -m pip install -e ".[models]"
+
+python -m redaktsafe.cli text "Consult completed for Avery Stone." \
+  --out /tmp/redaktsafe-model-smoke \
+  --hf-model-id OpenMed/OpenMed-PII-SuperClinical-Large-434M-v1
+```
+
+Model access tokens can be provided through `HF_TOKEN`, `HUGGING_FACE_HUB_TOKEN`, or `HF_READ` in the environment or local `.env`.
+
 After editable install, the console command is also available:
 
 ```bash
