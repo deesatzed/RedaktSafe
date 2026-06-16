@@ -143,6 +143,14 @@ Verification so far:
 - `python -m pytest` -> 35 passed.
 - `python -m redaktsafe.cli benchmark list` -> listed 5 supported benchmark adapters.
 - `python -m redaktsafe.cli benchmark run --source presidio_synthetic --input /tmp/redaktsafe-presidio-bench-sample.jsonl --out /tmp/redaktsafe-benchmark-presidio` -> 1 local sample case, recall 1.0, precision 1.0, false positives 0, unsafe-pass count 0, no raw input violations 0.
+- Live Hugging Face sample check for `nemotron_pii`:
+  - Pulled 5 rows through the Hugging Face datasets server into `/tmp/redaktsafe-nemotron-sample.jsonl`.
+  - `python -m redaktsafe.cli benchmark run --source nemotron_pii --input /tmp/redaktsafe-nemotron-sample.jsonl --out /tmp/redaktsafe-benchmark-nemotron-live` -> case count 5, recall 1.0, precision 0.0, false positives 7, unsafe-pass count 0, artifact completeness 1.0, receipt completeness 1.0, no raw input violations 0.
+  - Interpretation: the live Nemotron sample includes labels outside RedaktSafe's current core entity families, so this is a coverage-gap signal rather than a release blocker.
+- Live Hugging Face sample check for `ai4privacy_300k`:
+  - Pulled 5 validation rows through the Hugging Face datasets server into `/tmp/redaktsafe-ai4privacy-sample.jsonl`.
+  - `python -m redaktsafe.cli benchmark run --source ai4privacy_300k --input /tmp/redaktsafe-ai4privacy-sample.jsonl --out /tmp/redaktsafe-benchmark-ai4privacy-live` -> case count 5, recall 1.0, precision 1.0, false positives 0, unsafe-pass count 0, artifact completeness 1.0, receipt completeness 1.0, no raw input violations 0.
+- Kaggle/PIILO and n2c2/i2b2 were not downloaded or run live because they require user-managed account/terms or access-controlled clinical dataset handling.
 - `git diff --check` -> exited 0.
 - Standard CLI/eval proof rerun -> doctor ok, console doctor ok, 7 schemas exported, simple packet `NEEDS_MANUAL_REVIEW`, high-risk strict packet `NOT_LLM_SAFE` with strict return code `3`, eval recall 1.0, precision 1.0, unsafe-pass count 0.
 - Receipt raw-hit inspection for simple and high-risk runs -> no checked raw identifier hits.
