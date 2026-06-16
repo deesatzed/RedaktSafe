@@ -241,19 +241,21 @@ def test_learning_audit_runs_once_when_activity_exists_then_skips_if_no_new_acti
     assert skipped.new_activity_count == 0
 
 
-def test_context_canaries_cover_eponym_patient_institution_building_and_lab():
+def test_context_canaries_cover_eponym_patient_provider_institution_building_and_lab():
     canaries = context_canary_cases()
     texts = "\n".join(case["text"] for case in canaries)
     categories = {case["context_category"] for case in canaries}
 
     assert "DeVries syndrome" in texts
     assert "Patient DeVries" in texts
+    assert "Dr. DeVries" in texts
     assert "Johns Hopkins" in texts
     assert "East Tower" in texts
     assert "DeVries Lab" in texts
     assert {
         "medical_eponym",
         "patient_context",
+        "provider_name",
         "institution",
         "building_or_unit",
         "research_lab",
@@ -408,6 +410,7 @@ def test_learning_ledger_corpus_summary_covers_roadmap_categories(tmp_path):
     for context in [
         LearningContextCategory.PATIENT_CONTEXT,
         LearningContextCategory.MEDICAL_EPONYM,
+        LearningContextCategory.PROVIDER_NAME,
         LearningContextCategory.INSTITUTION,
         LearningContextCategory.BUILDING_OR_UNIT,
         LearningContextCategory.RESEARCH_LAB,
@@ -423,9 +426,10 @@ def test_learning_ledger_corpus_summary_covers_roadmap_categories(tmp_path):
 
     summary = ledger.corpus_summary()
 
-    assert summary["correction_count"] == 5
+    assert summary["correction_count"] == 6
     assert summary["context_counts"]["patient_context"] == 1
     assert summary["context_counts"]["medical_eponym"] == 1
+    assert summary["context_counts"]["provider_name"] == 1
     assert summary["context_counts"]["institution"] == 1
     assert summary["context_counts"]["building_or_unit"] == 1
     assert summary["context_counts"]["research_lab"] == 1

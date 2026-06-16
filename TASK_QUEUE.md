@@ -20,7 +20,7 @@ Source: `redaktsafe_codex_handoff/tasks/codex_task_queue.yml`.
 - P9-001: Add opt-in real Hugging Face token-classification model detector.
 - P10-001: Add opt-in encrypted local learning correction ledger and severity-ranked review queue.
 - P11-001: Add 24-hour-if-active learning audit, context canaries, shadow-mode promotion gates, and fine-tuning export/dry-run.
-- P12-001: Add benchmark backend comparison, reviewer correction API/UI, correction corpus summary, optional teacher-adapter injection, and expanded entity taxonomy.
+- P12-001: Add benchmark backend comparison, reviewer correction API/UI, correction corpus summary including provider-name ambiguity, optional teacher-adapter injection, and expanded entity taxonomy.
 
 ## Active
 

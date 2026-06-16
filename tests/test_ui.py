@@ -21,6 +21,7 @@ def test_ui_files_contain_required_workflow_and_no_remote_calls():
     assert "Learning Corrections" in combined
     assert "false negative" in combined.lower()
     assert "context category" in combined.lower()
+    assert "provider name ambiguity" in combined.lower()
     assert "fetch(\"/api/preflight\"" in app_js
     assert "fetch(\"/api/packet\"" in app_js
     assert "fetch(\"/api/learning/corrections\"" in app_js

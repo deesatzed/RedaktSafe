@@ -285,6 +285,7 @@ Implemented:
 - Added local UI controls for learning correction capture and queue refresh.
 - Added `redaktsafe learning corpus` for reviewed correction corpus coverage.
 - Added optional teacher-audit adapter injection and unavailable teacher-model metadata path.
+- Added explicit `provider_name` learning context support for provider-name ambiguity in canaries, corpus summaries, scoring, and the reviewer UI.
 
 Safety posture:
 
@@ -292,6 +293,7 @@ Safety posture:
 - Reviewer UI correction capture remains local and opt-in.
 - Learned snippets remain encrypted in `.redaktsafe_learning/`.
 - Expanded taxonomy is additive and does not weaken existing deterministic structured-identifier findings.
+- Provider-name ambiguity is reviewable context, not a blanket allowlist.
 
 Verification:
 
@@ -305,5 +307,34 @@ Verification:
 - FastAPI TestClient smoke -> `/health` healthy and `/` served the `Learning Corrections` section.
 - Local API health check at `http://127.0.0.1:8771/health` -> healthy.
 - TestClient UI check -> `Learning Corrections` section served by `/`.
+- Provider-name ambiguity test slice -> 3 passed for canary coverage, corpus summary, and UI option.
 - Node Playwright was unavailable in this checkout; frontend coverage is from static UI tests plus FastAPI TestClient smoke.
 - `git diff --check` -> exited 0.
+
+## 2026-06-16 Provider-Name Completion Gap
+
+Finding:
+
+- Completion audit found that provider-name ambiguity was detected as a `PROVIDER` entity type, but was not yet represented as an explicit learning context/corpus category.
+
+Implemented:
+
+- Added `provider_name` as a learning context category.
+- Added provider-name ambiguity to context canaries, learning severity scoring, correction corpus summaries, and the local reviewer UI.
+- Documented that provider-name corrections remain reviewable context and are not blanket allowlists.
+
+Fresh verification:
+
+- Provider-name ambiguity test slice -> 3 passed.
+- `python -m pytest -q` -> 58 passed.
+- `python -m redaktsafe.cli doctor` -> status ok.
+- `redaktsafe doctor` -> status ok.
+- `python -m redaktsafe.cli schemas --out /tmp/redaktsafe-schemas-final` -> wrote 11 schemas.
+- `python -m redaktsafe.cli learning canaries --out /tmp/redaktsafe-learning-canaries-final` -> case count 6, unsafe-pass count 0.
+- CLI learning smoke across patient context, medical eponym, provider name, institution, building/unit, and research lab -> correction count 6, first queue item `MRN` with `REVIEW_REDACT`, audit ran once with 6 candidates and `promote=false`, second audit skipped with `skip_reason=no_new_activity`, dry-run fine-tuning reported `ready=false`, plaintext scan found no raw snippet hits.
+- `python -m redaktsafe.cli eval --fixtures evals/cases.jsonl --out /tmp/redaktsafe-eval-final` -> 10 cases, recall 1.0, precision 0.9091, false positives 2, unsafe-pass count 0, no raw input violations 0.
+- Packet receipt/default artifact scan on simple and high-risk synthetic fixtures -> no checked raw identifier hits; high-risk strict packet returned expected code 3.
+- FastAPI TestClient smoke -> `/health` healthy, `/` served `Learning Corrections`, and UI included provider-name ambiguity.
+- OpenMed benchmark comparison on Nemotron -> deterministic recall 0.5833, OpenMed recall 0.9167, unsafe-pass count remained 1, promotion allowed false.
+- OpenMed benchmark comparison on AI4Privacy -> deterministic recall 0.0, OpenMed recall 0.2, unsafe-pass count improved from 4 to 1, false positives increased to 2, promotion allowed false.
+- Safety phrase scan -> no forbidden claim violations.

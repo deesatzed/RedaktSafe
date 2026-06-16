@@ -29,7 +29,7 @@ Latest verified commands before this remaining-work goal:
 - Plaintext scan of `/tmp/redaktsafe-learning-goal-smoke` found no raw snippet hits.
 - OpenMed benchmark comparison on Nemotron improved recall from 0.5833 to 0.9167, but unsafe-pass count remained 1 and promotion stayed false.
 - OpenMed benchmark comparison on AI4Privacy improved recall from 0.0 to 0.2 and unsafe-pass from 4 to 1, but false positives increased and promotion stayed false.
-- Reviewer correction API/UI, correction corpus summary, optional teacher-audit adapter injection, and expanded taxonomy detection are implemented and covered by tests.
+- Reviewer correction API/UI, correction corpus summary, provider-name ambiguity context, optional teacher-audit adapter injection, and expanded taxonomy detection are implemented and covered by tests.
 - `git diff --check` exited 0.
 - Safety phrase scan found no forbidden compliance or safety overclaims.
 

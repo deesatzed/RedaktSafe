@@ -38,6 +38,7 @@ class LearningContextCategory(str, Enum):
     DIRECT_IDENTIFIER = "direct_identifier"
     PATIENT_CONTEXT = "patient_context"
     MEDICAL_EPONYM = "medical_eponym"
+    PROVIDER_NAME = "provider_name"
     INSTITUTION = "institution"
     BUILDING_OR_UNIT = "building_or_unit"
     RESEARCH_LAB = "research_lab"

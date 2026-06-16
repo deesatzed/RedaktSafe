@@ -52,6 +52,7 @@ CONTEXT_COST = {
     LearningContextCategory.DIRECT_IDENTIFIER: 24,
     LearningContextCategory.PATIENT_CONTEXT: 22,
     LearningContextCategory.UNKNOWN: 18,
+    LearningContextCategory.PROVIDER_NAME: 14,
     LearningContextCategory.BUILDING_OR_UNIT: 12,
     LearningContextCategory.RESEARCH_LAB: 10,
     LearningContextCategory.INSTITUTION: 8,
@@ -326,6 +327,12 @@ def context_canary_cases() -> list[dict[str, str]]:
             "text": "Patient DeVries, DOB 1970-01-01, MRN E1234567, called today.",
             "context_category": LearningContextCategory.PATIENT_CONTEXT.value,
             "expected_route": ReviewRoute.REVIEW_REDACT.value,
+        },
+        {
+            "case_id": "provider_devries_name",
+            "text": "Dr. DeVries reviewed the synthetic teaching case.",
+            "context_category": LearningContextCategory.PROVIDER_NAME.value,
+            "expected_route": ReviewRoute.REVIEW_ALLOW.value,
         },
         {
             "case_id": "institution_johns_hopkins",

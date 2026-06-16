@@ -81,6 +81,8 @@ python -m redaktsafe.cli learning export-finetune \
   --dry-run
 ```
 
+Learning context categories include patient context, medical eponym, provider-name ambiguity, institution, building/unit, research lab, direct identifier, clean context, and unknown.
+
 After editable install, the console command is also available:
 
 ```bash

@@ -83,3 +83,9 @@ The local UI and API can capture learning corrections into `.redaktsafe_learning
 Status: Accepted
 
 RedaktSafe expands normalization and deterministic detection for `ID`, `USERNAME`, `INSTITUTION`, `LAB`, `DEPARTMENT`, `BUILDING`, and `PROVIDER`. These entity types are additive and must not weaken existing deterministic structured-identifier findings such as MRN, SSN, email, phone, and address.
+
+## 2026-06-16: Provider-Name Ambiguity Is a Learning Context
+
+Status: Accepted
+
+Provider names are not treated as globally safe or globally unsafe. RedaktSafe now records `provider_name` as a distinct learning context so reviewed corrections can distinguish clinician/provider references from patient-name contexts, medical eponyms, institutions, buildings/units, and research labs. Provider-name corrections remain reviewable and do not auto-promote learned behavior.
